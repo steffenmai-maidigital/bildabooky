@@ -1,0 +1,180 @@
+/* BilDaBooky — Editor (Tablet zuerst: große Knöpfe, alles mit dem Finger bedienbar)
+
+   BilDaBooky — editor (tablet first: big buttons, everything usable with a finger) */
+body.editor-body { overflow: hidden; height: 100vh; height: 100dvh; }
+.ed { position: fixed; inset: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); background: #ece6dc; }
+.ed > * { min-width: 0; }
+
+.ed-header { display: flex; align-items: center; gap: .5rem; padding: .45rem .7rem; background: #fff; border-bottom: 1px solid var(--line); }
+.ed-button { min-width: 44px; height: 44px; padding: 0 .8rem; border-radius: 999px; background: #f2ede4; color: var(--ink); font-weight: 700; font-size: 1.05rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: .3rem; flex: none; }
+.ed-read { background: var(--blue); color: #fff; }
+.ed-title { flex: 1; min-width: 0; font-weight: 800; font-size: 1.15rem; border: 2px solid transparent !important; background: transparent !important; }
+.ed-title:hover, .ed-title:focus { border-color: var(--line) !important; background: #fff !important; }
+.ed-status { font-size: .85rem; color: var(--muted); white-space: nowrap; flex: none; }
+.ed-status.ok { color: var(--green); }
+.ed-status.error { color: var(--danger); font-weight: 700; }
+
+.ed-middle { display: flex; min-height: 0; }
+.ed-tools { display: flex; flex-direction: column; gap: .35rem; padding: .5rem; background: #fff; border-right: 1px solid var(--line); overflow-y: auto; }
+.ed-tools button { flex-direction: column; gap: 0; width: 72px; min-height: 64px; padding: .35rem; border-radius: 16px; background: color-mix(in srgb, var(--accent) 7%, #fff); font-size: .78rem; line-height: 1.1; }
+.ed-tools button b { font-size: 1.5rem; line-height: 1.2; font-weight: 800; }
+.ed-tools button b[data-emoji] { display: flex; align-items: center; justify-content: center; height: 1.8rem; }
+.ed-tools button b img.emoji-image { width: 1.65rem; height: 1.65rem; pointer-events: none; }
+.ed-tools button:hover { background: var(--accent-soft); }
+
+.ed-stage { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.ed-empty-hint { color: var(--muted); font-size: .92rem; margin: .4rem .2rem; }
+.ed-page-frame { box-shadow: 0 10px 34px rgba(38,50,74,.22); border-radius: 4px; overflow: visible !important; }
+.ed-page-frame .bdb-page { overflow: visible; }
+.ed-page-frame .bdb-page::after { content: ""; position: absolute; inset: 0; pointer-events: none; box-shadow: 0 0 0 9999px rgba(236,230,220,.82); }
+.ed-page-frame .bdb-el { cursor: grab; touch-action: none; }
+.ed-page-frame .bdb-audio button { cursor: grab; }
+/* Sticker: nur das sichtbare Bild greift, der leere Rand lässt Klicks durch (z. B. auf einen Tonknopf darunter)
+
+   Stickers: only the visible image catches clicks, the empty margin lets them through (e.g. to a sound button below) */
+.ed-page-frame .bdb-sticker:not(.ed-selected) { pointer-events: none; }
+.ed-page-frame .bdb-sticker .emoji-image { pointer-events: auto; }
+
+/* Auswahl: Griffe bleiben auf dem Bildschirm gleich groß (--px = 1 Bildschirmpixel)
+
+   Selection: handles stay the same size on screen (--px = 1 screen pixel) */
+.ed-selected { z-index: 10; }
+.ed-selection { position: absolute; inset: calc(var(--px) * -4); border: calc(var(--px) * 2.5) solid var(--blue); border-radius: calc(var(--px) * 6); pointer-events: none; }
+.ed-handle { position: absolute; pointer-events: auto; width: calc(var(--px) * 30); height: calc(var(--px) * 30); background: #fff; border: calc(var(--px) * 3) solid var(--blue); border-radius: 50%; box-sizing: border-box; touch-action: none; }
+/* größere Trefferfläche */
+/* larger hit area */
+.ed-handle::before { content: ""; position: absolute; inset: calc(var(--px) * -10); }
+.ed-resize { right: calc(var(--px) * -17); bottom: calc(var(--px) * -17); cursor: nwse-resize; }
+.ed-rotate { left: 50%; top: calc(var(--px) * -54); transform: translateX(-50%); cursor: grab; display: flex; align-items: center; justify-content: center; color: var(--blue); font-size: calc(var(--px) * 18); font-weight: 900; }
+.ed-typing { cursor: text !important; }
+.ed-typing .bdb-content { cursor: text; -webkit-user-select: text; user-select: text; }
+.ed-typing .ed-handle { display: none; }
+.bdb-content[contenteditable]:empty::before { content: attr(data-placeholder); opacity: .4; }
+
+.ed-properties { width: 270px; flex: none; background: #fff; border-left: 1px solid var(--line); overflow-y: auto; padding: .6rem .7rem 1rem; }
+.ed-group { margin-bottom: .7rem; }
+.ed-group-title { font-size: .78rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .3rem; }
+.ed-row { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.ed-row button { min-height: 44px; min-width: 44px; padding: .3rem .6rem; border-radius: 12px; font-size: 1rem; background: #f4efe6; }
+.ed-row button.on { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
+.ed-arrange .ed-row { display: grid; grid-template-columns: 1fr; gap: .3rem; }
+.ed-arrange .ed-row button { display: flex; align-items: center; justify-content: flex-start; gap: .55rem; text-align: left; padding: .35rem .7rem; font-weight: 600; }
+.ed-arrange .ed-row button:disabled { opacity: .4; }
+.ed-b-symbol { font-size: 1.3rem; width: 1.6rem; height: 1.6rem; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.ed-b-symbol img.emoji-image { width: 1.45rem; height: 1.45rem; pointer-events: none; }
+.ed-row button.ed-with-symbol { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; }
+.ed-b-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
+.ed-b-text small { font-weight: 500; font-size: .78rem; color: var(--muted); }
+.ed-arrange .ed-delete { background: #fbe1dd; color: var(--danger, #c0392b); }
+.ed-value { min-width: 2.4rem; text-align: center; font-weight: 700; }
+.ed-colour { width: 36px !important; height: 36px; min-width: 36px !important; min-height: 36px !important; padding: 0 !important; border-radius: 50% !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
+.ed-colour.on { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--blue) !important; }
+.ed-colour.none { background: #fff !important; color: var(--muted); }
+.ed-colour.large { width: 52px !important; height: 52px; }
+.ed-colour-grid { display: flex; flex-wrap: wrap; gap: .6rem; }
+
+.ed-footer { background: #fff; border-top: 1px solid var(--line); }
+.ed-page-bar { display: flex; gap: .55rem; align-items: center; overflow-x: auto; padding: .5rem .7rem calc(.5rem + env(safe-area-inset-bottom)); }
+.ed-page-actions { display: grid; grid-template-columns: 1fr 1fr; gap: .25rem; flex: none; }
+.ed-page-actions button { min-height: 40px; min-width: 40px; padding: 0; border-radius: 10px; font-size: .95rem; }
+.ed-mini { flex: none; flex-direction: column; gap: .15rem; padding: .3rem; min-height: 0; border-radius: 10px; background: transparent; border: 3px solid transparent; }
+.ed-mini.on { border-color: var(--accent); background: var(--accent-soft); }
+.ed-mini-image { display: block; pointer-events: none; }
+.ed-mini-image .bdb-frame { box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+.ed-mini-nr { font-size: .75rem; color: var(--muted); }
+.ed-plus { width: 90px; height: 100px; border: 3px dashed color-mix(in srgb, var(--accent) 45%, #fff); color: var(--accent-strong); font-size: 1.6rem; }
+
+/* Malen / Painting */
+.ed-canvas { position: absolute; left: 0; top: 0; z-index: 50; touch-action: none; cursor: crosshair; }
+.ed-painting .ed-tools, .ed-painting .ed-properties, .ed-painting .ed-footer { pointer-events: none; opacity: .35; }
+.ed-paint-bar { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 100; background: #fff; border-radius: 22px; box-shadow: 0 10px 40px rgba(0,0,0,.28);
+    display: flex; flex-wrap: wrap; gap: .5rem .9rem; padding: .6rem .8rem; justify-content: center; max-width: calc(100vw - 24px); }
+.ed-paint-group { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; justify-content: center; }
+.ed-paint-bar button { min-height: 44px; min-width: 44px; padding: .2rem .7rem; border-radius: 12px; }
+.ed-paint-bar .ed-width i { display: block; background: var(--ink); border-radius: 50%; }
+.ed-paint-bar .on { box-shadow: inset 0 0 0 3px var(--blue); }
+
+/* Dialoge / Dialogs */
+.ed-sticker-picker { width: min(500px, calc(100vw - 100px)); max-width: 100%; }
+.ed-sticker-tabs { display: flex; gap: .25rem; overflow-x: auto; padding-bottom: .4rem; border-bottom: 2px solid var(--line); scrollbar-width: thin; }
+.ed-sticker-tabs button { flex: 0 0 auto; width: 48px; height: 48px; padding: 0; font-size: 1.6rem; border-radius: 12px; background: transparent; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; opacity: .6; }
+.ed-sticker-tabs button[aria-selected="true"] { background: #f8f4ed; opacity: 1; box-shadow: inset 0 -3px 0 var(--accent); }
+.ed-sticker-grid button img.emoji-image { width: 36px; height: 36px; pointer-events: none; }
+.ed-sticker-tabs button img.emoji-image { width: 28px; height: 28px; pointer-events: none; }
+.ed-sticker-title { font-weight: 700; margin: .5rem 0 .4rem; }
+.ed-sticker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: .3rem; height: min(50vh, 420px); overflow-y: auto; align-content: start; }
+.ed-sticker-grid button { font-size: 2rem; min-height: 56px; padding: 0; border-radius: 12px; background: #f8f4ed; font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.ed-audio { text-align: center; min-width: min(360px, 80vw); }
+.ed-audio-button { width: 104px; height: 104px; border-radius: 50%; background: #fbe1dd; margin: .5rem auto; }
+.ed-audio-button i { display: block; width: 48px; height: 48px; border-radius: 50%; background: #e63946; transition: border-radius .2s, width .2s, height .2s; }
+.ed-audio-button.recording i { border-radius: 8px; width: 40px; height: 40px; }
+.ed-audio-button.recording { animation: bdb-pulse 1.2s ease-in-out infinite; }
+.ed-audio-time { font-size: 1.6rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ed-audio audio { width: 100%; margin-top: .6rem; }
+.ed-audio .actions { justify-content: center; }
+
+/* Telefon / schmales Tablet: Werkzeuge unten, Eigenschaften als Blatt
+
+   Phone / narrow tablet: tools at the bottom, properties as a sheet */
+@media (max-width: 760px) {
+    .ed-wide-only { display: none; }
+    .ed-middle { flex-direction: column-reverse; }
+    .ed-tools { flex-direction: row; border-right: 0; border-top: 1px solid var(--line); overflow-x: auto; overflow-y: hidden; padding: .4rem; flex: none; }
+    .ed-tools button { width: 64px; min-height: 58px; flex: none; }
+    .ed-properties { position: fixed; left: 0; right: 0; bottom: 0; width: auto; max-height: 42vh; z-index: 40; border-left: 0; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,.18); }
+    .ed-status { display: none; }
+    .ed-properties.empty { display: none; }
+    .ed-arrange .ed-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* Gemeinsam arbeiten (Klassenbuch) / Working together (class book) */
+.ed-others { font-size: .85rem; font-weight: 700; color: var(--accent-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30%; flex: none; }
+.ed-mini { position: relative; }
+.ed-mini-who { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 5px; border-radius: 999px; background: var(--blue); color: #fff; font-size: .72rem; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px #fff; }
+.ed-page-actions.duplicate-only { grid-template-columns: 1fr; }
+#ed-book-dialog .share { border-top: 0; padding-top: 0; }
+.ed-submit-button { background: #2a9d8f; color: #fff; }
+.ed-submit-button.submitted { background: #e3f6ef; color: #1d6f65; box-shadow: inset 0 0 0 2px #2a9d8f; }
+
+/* Tooltips beim Draufzeigen (nur mit Maus/Trackpad, siehe editor.js)
+
+   Tooltips on hover (mouse/trackpad only, see editor.js) */
+.ed-tip { position: fixed; z-index: 1000; max-width: 250px; padding: .45rem .65rem; border-radius: 10px; background: #26324a; color: #fff;
+    font-size: .82rem; line-height: 1.3; box-shadow: 0 6px 20px rgba(0,0,0,.22); pointer-events: none; opacity: 0; transform: translateY(2px);
+    transition: opacity .12s, transform .12s; margin: 0; }
+.ed-tip.visible { opacity: 1; transform: none; }
+.ed-tip[data-side="right"] { transform: translateX(-2px); }
+.ed-tip[data-side="right"].visible { transform: none; }
+.ed-tip b { display: flex; align-items: center; gap: .4rem; font-weight: 800; }
+.ed-tip span { display: block; margin-top: .15rem; color: #d7deea; }
+.ed-tip kbd { margin-left: auto; padding: .05rem .35rem; border-radius: 5px; background: rgba(255,255,255,.16); font: inherit; font-size: .75rem; font-weight: 700; }
+.ed-tip-colour { width: .9rem; height: .9rem; border-radius: 50%; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6); flex: none; }
+@media (prefers-reduced-motion: reduce) { .ed-tip { transition: none; } }
+
+/* Erklärungen: langes Drücken (Tablet/Handy) und Erklär-Modus (❓)
+
+   Explanations: long press (tablet/phone) and explain mode (❓) */
+.ed-tip.large { font-size: .95rem; max-width: min(300px, calc(100vw - 32px)); padding: .6rem .8rem; }
+.ed-tools button, .ed-header .ed-button, .ed-properties button, .ed-footer button, .ed-handle { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+.ed-button.ed-explain.on { background: var(--accent); color: var(--accent-ink); box-shadow: 0 0 0 3px var(--accent-soft); }
+.ed-explain-hint { position: fixed; z-index: 900; left: 50%; top: 64px; transform: translateX(-50%); max-width: calc(100vw - 32px);
+    padding: .5rem .9rem; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-weight: 700; font-size: .9rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,.18); text-align: center; pointer-events: none; }
+.ed-explain-mode .ed-tools button, .ed-explain-mode .ed-header [data-tip], .ed-explain-mode .ed-properties [data-tip],
+.ed-explain-mode .ed-footer [data-tip], .ed-explain-mode .ed-header [title], .ed-explain-mode .ed-properties [title], .ed-explain-mode .ed-footer [title] {
+    cursor: help; outline: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
+@media (max-width: 760px) { .ed-explain-hint { top: auto; bottom: 150px; border-radius: 16px; } }
+
+/* Rückgabe durch die Lehrkraft: Hinweis für das Kind / Given back by the teacher: notice for the child */
+.ed-returned { position: fixed; z-index: 850; top: 64px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100vw - 24px));
+    display: flex; gap: .7rem; align-items: flex-start; padding: .7rem .8rem .7rem 1rem; border-radius: 16px; background: #fff3cd; color: #5c4400;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18); line-height: 1.35; }
+.ed-returned-symbol { font-size: 1.5rem; line-height: 1; margin-top: .1rem; }
+.ed-returned div { flex: 1; min-width: 0; }
+.ed-returned b { display: block; }
+.ed-returned-note { display: block; margin-top: .2rem; font-size: 1.05rem; overflow-wrap: anywhere; }
+.ed-returned small { display: block; margin-top: .25rem; opacity: .8; }
+.ed-returned-close { flex: none; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; background: rgba(92,68,0,.1); color: inherit; }
+@media (max-width: 760px) { .ed-returned { top: 60px; } }
+.ed-header .session-clock.ed-button { background: #e3f6ef; color: #1d6b52; font-size: .95rem; }
+.ed-header .session-clock.ed-button.soon { background: #fde2dd; color: #b42318; }

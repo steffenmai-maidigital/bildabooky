@@ -1,0 +1,130 @@
+# BilDaBooky Community Edition — Compose-Projekt (z. B. Synology Container Manager).
+# Kommt OHNE .env-Datei aus; alle Werte stehen hier und lassen sich in der
+# DSM-Oberfläche pflegen.
+#
+# Datenhaltung:
+#   app-data    — Datenbank, Medien (Fotos, Zeichnungen, Ton) und APP_KEY
+#   app-storage — Sitzungen, Protokolle, Zwischenspeicher
+#   ./backups   — nächtliche Sicherungen (Ordner vorher anlegen)
+#
+# WICHTIG: Kamera und Mikrofon funktionieren im Browser nur über HTTPS
+# (oder auf localhost). Für den Schulbetrieb daher hinter einen Reverse
+# Proxy mit Zertifikat stellen (DSM: Anmeldeportal → Reverse Proxy).
+#
+# BilDaBooky Community Edition — Compose project (e.g. Synology Container Manager).
+# Works WITHOUT an .env file; all values are here and can be maintained in the
+# DSM interface.
+#
+# Data storage:
+#   app-data    — database, media (photos, drawings, sound) and APP_KEY
+#   app-storage — sessions, logs, cache
+#   ./backups   — nightly backups (create the folder beforehand)
+#
+# IMPORTANT: camera and microphone only work in the browser over HTTPS
+# (or on localhost). For school use, therefore put it behind a reverse
+# proxy with a certificate (DSM: Login Portal → Reverse Proxy).
+services:
+  app:
+    # Jeder Bau erzeugt bildabooky:latest; eine veröffentlichte Version bekommt zusätzlich die
+    # Versionsnummer (JJMMTTNN) als Tag an. ZURÜCK zu einer alten Version:
+    # unten bei beiden Diensten „build: .“ auskommentieren und bei „image:“
+    # die alte Nummer eintragen, z. B. bildabooky:26101101.
+    # Every build creates bildabooky:latest; a published version additionally gets the
+    # version number (YYMMDDNN) as a tag. BACK to an old version:
+    # comment out "build: ." for both services below and enter the old
+    # number at "image:", e.g. bildabooky:26101101.
+    # Fertiges Abbild statt selbst bauen (sobald das Repo öffentlich ist):
+    # Ready-made image instead of building it yourself (once the repo is public):
+    # image: ghcr.io/steffenmai-maidigital/bildabooky:latest
+    image: bildabooky:latest
+    build: .
+    container_name: bildabooky
+    ports:
+      - "7290:80"
+    environment: &app-env
+      APP_NAME: "BilDaBooky"
+      SCHOOL_NAME: "Unsere Grundschule"
+      # Link zum Quellcode (AGPL); bei eigenen Änderungen auf euer Repo zeigen lassen
+      # Link to the source code (AGPL); point it to your own repo if you make changes
+      SOURCE_URL: ""
+      # Zwei-Faktor-Pflicht für Rollen, z. B. "admin" oder "admin,teacher"
+      # Mandatory two-factor for roles, e.g. "admin" or "admin,teacher"
+      REQUIRE_2FA_ROLES: ""
+      # Öffentliche Adresse, z. B. https://buecher.meine-schule.de
+      # Public address, e.g. https://buecher.meine-schule.de
+      APP_URL: "http://localhost:7290"
+      # Reverse Proxys, deren Angaben (echte IP, HTTPS) geglaubt werden.
+      # Standard: nur interne Netze (Docker, Schulnetz). "*" = allen vertrauen.
+      # Reverse proxies whose details (real IP, HTTPS) are trusted.
+      # Default: internal networks only (Docker, school network). "*" = trust all.
+      TRUSTED_PROXIES: "127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,::1,fc00::/7"
+      APP_DEBUG: "false"
+      # Testsystem: "true" zeigt oben das Banner TESTSYSTEM (zweite Instanz zum Ausprobieren)
+      # Test system: "true" shows the TESTSYSTEM banner at the top (second instance for trying things out)
+      TEST_MODE: "false"
+      DB_DATABASE: "/data/bildabooky.sqlite"
+      MEDIA_PATH: "/data/medien"
+      BACKUP_PATH: "/backups"
+      BACKUP_KEEP_DAYS: "14"
+      # Tagesprotokolle so lange aufbewahren (Hilfe zeigt Fehler der letzten 30 Tage)
+      # Keep daily logs this long (help shows errors of the last 30 days)
+      LOG_DAILY_DAYS: "30"
+      # Erster Admin-Zugang (nur beim allerersten Start angelegt).
+      # ADMIN_PASSWORD leer lassen: Dann erzeugt BilDaBooky ein zufälliges
+      # Startpasswort und schreibt es ins Protokoll des Containers
+      # (Container Manager → Projekt → Protokoll, bzw. docker compose logs app).
+      # Das Passwort muss bei der ersten Anmeldung geändert werden.
+      # First admin access (created only on the very first start).
+      # Leave ADMIN_PASSWORD empty: BilDaBooky then generates a random
+      # initial password and writes it to the container log
+      # (Container Manager → Project → Log, or docker compose logs app).
+      # The password must be changed at the first sign-in.
+      ADMIN_USERNAME: "admin"
+      ADMIN_PASSWORD: ""
+      # Demo: legt Lehrerin, Klasse 2b, zwei Kinder und ein Beispielbuch an
+      # Demo: creates a teacher, class 2b, two children and a sample book
+      DEMO_MODE: "false"
+      # ----- Schulverzeichnis (Active Directory / Univention / LDAP) ist optional
+      #       und wird in der Oberfläche unter Einstellungen → 9 eingerichtet.
+      #       Startwerte lassen sich auch hier setzen:
+      # ----- The school directory (Active Directory / Univention / LDAP) is optional
+      #       and is set up in the interface under Settings → 9.
+      #       Initial values can also be set here:
+      # LDAP_HOST: "dc01.schule.local"
+      # LDAP_PORT: "636"
+      # LDAP_SSL: "true"
+      # LDAP_BASE_DN: "DC=schule,DC=local"
+      # LDAP_USERNAME: "CN=svc-bildabooky,OU=Service,DC=schule,DC=local"
+      # LDAP_PASSWORD: "geheim"
+      # Einmaliger Reset: "1" löscht Datenbank UND alle Medien beim Start.
+      # Danach UNBEDINGT wieder auf "0" stellen!
+      # One-off reset: "1" deletes the database AND all media on start.
+      # Afterwards ALWAYS set it back to "0"!
+      FRESH_DB: "0"
+    volumes:
+      - app-data:/data
+      - app-storage:/var/www/html/storage
+      - ./backups:/backups
+    restart: unless-stopped
+
+  # Nächtliche Sicherung (Datenbank + Medien als ZIP nach ./backups)
+  # Nightly backup (database + media as ZIP to ./backups)
+  scheduler:
+    image: bildabooky:latest
+    build: .
+    container_name: bildabooky-scheduler
+    command: ["php", "artisan", "schedule:work"]
+    environment:
+      <<: *app-env
+      SKIP_SETUP: "1"
+    volumes:
+      - app-data:/data
+      - app-storage:/var/www/html/storage
+      - ./backups:/backups
+    depends_on:
+      - app
+    restart: unless-stopped
+
+volumes:
+  app-data:
+  app-storage:

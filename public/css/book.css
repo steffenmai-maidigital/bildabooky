@@ -1,0 +1,33 @@
+/* Buchseiten — gemeinsam für Editor, Leser, Druck und die Datei zum Mitnehmen
+
+   Book pages — shared by editor, reader, print and the take-away file */
+.bdb-frame { position: relative; overflow: hidden; flex: none; }
+.bdb-page { position: absolute; left: 0; top: 0; width: 1000px; transform-origin: 0 0; overflow: hidden; background: #fff; }
+.bdb-el { position: absolute; transform-origin: 50% 50%; }
+.bdb-text .bdb-content { width: 100%; min-height: 100%; white-space: pre-wrap; word-wrap: break-word; overflow-wrap: anywhere; line-height: 1.25; padding: .15em .25em; outline: none; }
+.bdb-text.with-bg .bdb-content { border-radius: .35em; padding: .25em .45em; }
+.bdb-image img { width: 100%; height: 100%; object-fit: contain; display: block; pointer-events: none; user-select: none; -webkit-user-drag: none; }
+.bdb-image.flipped img { transform: scaleX(-1); }
+.bdb-sticker { display: flex; align-items: center; justify-content: center; line-height: 1; user-select: none;
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; }
+.bdb-sticker img.emoji-image { width: 86%; height: 86%; object-fit: contain; pointer-events: none; }
+.bdb-shape .bdb-shape-fill { width: 100%; height: 100%; }
+/* .bdb-el.bdb-audio > button.bdb-audio-button: stärker als allgemeine Knopfregeln (z. B. .reader button)
+
+   .bdb-el.bdb-audio > button.bdb-audio-button: stronger than general button rules (e.g. .reader button) */
+.bdb-el.bdb-audio > button.bdb-audio-button { all: unset; box-sizing: border-box; width: 100%; height: 100%; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    color: #fff; box-shadow: 0 6px 0 rgba(0,0,0,.18); cursor: pointer; padding: 0; min-height: 0; }
+.bdb-el.bdb-audio > button.bdb-audio-button svg { width: 58%; height: 58%; overflow: visible; transform: rotate(var(--counter-rotate, 0deg)); }
+.bdb-el.bdb-audio > button.bdb-audio-button:focus-visible { outline: 4px solid #fff; outline-offset: -10px; }
+.bdb-audio.playing > button.bdb-audio-button { animation: bdb-pulse 1s ease-in-out infinite; }
+.bdb-audio.playing .bdb-wave1 { animation: bdb-wave 1s ease-in-out infinite; }
+.bdb-audio.playing .bdb-wave2 { animation: bdb-wave 1s ease-in-out .25s infinite; }
+@keyframes bdb-wave { 50% { opacity: .2; } }
+@keyframes bdb-pulse { 50% { transform: scale(1.08); } }
+
+/* Schriften: nur Systemschriften, nichts wird nachgeladen / Fonts: system fonts only, nothing is loaded */
+.bdb-f-sans    { font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+.bdb-f-rounded { font-family: "Chalkboard SE", "Comic Sans MS", "Comic Neue", "Marker Felt", "Avenir Next Rounded", system-ui, sans-serif; }
+.bdb-f-serif   { font-family: Georgia, "Iowan Old Style", "Times New Roman", serif; }
+.bdb-f-hand    { font-family: "Bradley Hand", "Segoe Print", "Noteworthy", "Comic Sans MS", cursive; }
+.bdb-f-heavy   { font-family: "Arial Rounded MT Bold", "Arial Black", Impact, system-ui, sans-serif; font-weight: 900; }
