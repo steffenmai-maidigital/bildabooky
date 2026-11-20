@@ -141,8 +141,11 @@ class BookController extends Controller
 
         $disk = Storage::disk('media');
         $media = [];
+        // nur, was auf einer Seite steht: entfernte Fotos und Töne kommen nicht mit nach Hause
+        // only what is on a page: removed photos and sounds do not go home
+        $used = $book->usedMediaIds();
         foreach ($book->media as $m) {
-            if ($disk->exists($m->path)) {
+            if (isset($used[$m->id]) && $disk->exists($m->path)) {
                 $media[$m->id] = 'data:' . $m->mime . ';base64,' . base64_encode($disk->get($m->path));
             }
         }

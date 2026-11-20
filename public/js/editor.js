@@ -71,9 +71,9 @@
     let error = false;
 
     const page = () => book.pages[nr];
-    // Fuchs-Helfer (falls eingeschaltet) über das Geschehen informieren
-    // Tell the fox helper (if switched on) what is happening
-    const fox = (k, values, repeatable) => { if (window.FoxEvents) window.FoxEvents.event(k, values, repeatable); };
+    // Cara (falls eingeschaltet) sagen, was gerade getan wurde – sie antwortet nur auf Aktionen
+    // Tell Cara (if switched on) what was just done – she only replies to actions
+    const companion = (k, values, repeatable) => { if (window.CompanionEvents) window.CompanionEvents.event(k, values, repeatable); };
     const element = (id) => page().elements.find((e) => e.id === id);
     const newId = () => 'e' + Math.random().toString(36).slice(2, 10);
     const round = (v) => Math.round(v * 10) / 10;
@@ -327,7 +327,7 @@
         if (selected && !element(selected)) selected = null;
         draw();
         changed();
-        fox('undo');
+        companion('undo');
     }
 
     /**
@@ -419,7 +419,7 @@
         e.preventDefault();
         const handle = target.closest('.ed-handle');
         const alreadySelected = selected === id;
-        if (!alreadySelected) { select(id); fox('select_' + x.type); }
+        if (!alreadySelected) { select(id); companion('select_' + x.type); }
         drag = {
             kind: handle ? (handle.classList.contains('ed-rotate') ? 'rotate' : 'resize') : 'move',
             id, start: point(e), orig: Object.assign({}, x), before: snapshot(page()),
@@ -582,7 +582,7 @@
         selected = x.id;
         draw();
         editText(x.id, true);
-        fox('new_text');
+        companion('new_text');
     }
 
     function newShape() {
@@ -641,7 +641,7 @@
             const w = round(b.w * f), h = round(b.h * f);
             if (page() !== s) return;
             add(Object.assign({ id: newId(), type: 'image', media: m.id, flip: false, w, h, r: 0 }, centre(w, h)));
-            fox('photo');
+            companion('photo');
         } catch (e) {
             status('error', e.message);
             alert(t('Das Foto konnte nicht hochgeladen werden.') + '\n' + e.message);
@@ -669,7 +669,7 @@
         ctx.lineJoin = 'round';
 
         painting = { c, ctx, q, strokes: [], colour: '#26324a', width: 12, eraser: false, active: null };
-        fox('paint');
+        companion('paint');
 
         const bar = document.createElement('div');
         bar.className = 'ed-paint-bar';
@@ -858,7 +858,7 @@
                 dialog.close();
                 const g = 140;
                 add(Object.assign({ id: newId(), type: 'audio', media: m.id, color: '#ff7a3d', w: g, h: g, r: 0 }, centre(g, g)));
-                fox('audio_done');
+                companion('audio_done');
             } catch (e) {
                 ok.disabled = false;
                 ok.textContent = t('Einfügen');
@@ -1120,7 +1120,7 @@
         selected = null;
         draw();
         changed();
-        fox('deleted');
+        companion('deleted');
     }
 
     // ---- Seitenleiste / Page sidebar ------------------------------------------------
@@ -1197,8 +1197,8 @@
             drawPageBar();
             draw();
             const n = book.pages.length;
-            if (n === 5 || n === 10 || n === 20) fox('many_pages', { n }, true);
-            else fox('new_page');
+            if (n === 5 || n === 10 || n === 20) companion('many_pages', { n }, true);
+            else companion('new_page');
         } catch (e) {
             alert(e.message);
         }
@@ -1290,7 +1290,7 @@
             // Lehrkraft hebt das Teilen eines Kinderbuchs auf → erst nachfragen
             // Teacher removes the sharing of a child's book → ask first
             if (target === 'private' && R.othersBook
-                && !confirm(t('Das Teilen von „:titel“ (von :name) wirklich aufheben?', { title: $('ed-title').value, name: E.owner || '' }))) return;
+                && !confirm(t('Das Teilen von „:titel“ (von :name) wirklich aufheben?', { titel: $('ed-title').value, name: E.owner || '' }))) return;
             await changeBook({ sharing: target });
             share.dataset.sharing = target;
             showShare();
@@ -1342,7 +1342,7 @@
                 const r = await request(E.urls.submit, 'POST', { done: !at });
                 submitButton.dataset.submitted = r.submitted || '';
                 showSubmit();
-                if (r.submitted) { fox('submitted'); if (returned) returned.remove(); }
+                if (r.submitted) { companion('submitted'); if (returned) returned.remove(); }
             } catch (e) { alert(e.message); }
         });
     }
@@ -1476,6 +1476,9 @@
             if (!el) return null;
             if (el.hasAttribute('title')) {
                 el.dataset.tip = el.title;
+                // der Titel war oft der einzige Name (↶, ⚙️): für Bildschirmleser als aria-label behalten
+                // the title was often the only name (↶, ⚙️): keep it as aria-label for screen readers
+                if (!el.hasAttribute('aria-label')) el.setAttribute('aria-label', el.title);
                 el.removeAttribute('title');
             }
             return el;
@@ -1669,11 +1672,9 @@
         window.addEventListener('scroll', () => { if (!mode) hide(); }, true);
         window.addEventListener('blur', hide);
 
-        // Der Fuchs verrät es einmal (je Gerät), solange noch nie eine Erklärung kam
-        // The fox reveals it once (per device) as long as no explanation has ever come
-        let alreadyExplained = false;
-        alreadyExplained = BDB.stored('bdb-explained', 'bw_erklaert') === '1';   // alter Schlüssel / old key
-        if (!alreadyExplained) setTimeout(() => fox(MOUSE ? 'explain_mouse' : 'explain_touch'), 40000);
+        // alten Schlüssel einmal übernehmen (den Erklär-Hinweis nach Zeit gibt es nicht mehr, er ist ein Tipp von Cara)
+        // take over the old key once (the timed explanation hint is gone, it is one of Cara's tips)
+        BDB.stored('bdb-explained', 'bw_erklaert');
     })();
 
     nr = Math.max(0, Math.min(book.pages.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));

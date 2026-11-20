@@ -52,33 +52,51 @@ class AuthController extends Controller
 
         // Kinder-Passwörter sind bewusst einfach — deshalb zweifach bremsen:
         //  - je Name und Gerät: 6 Versuche, dann 1 Minute Pause
-        //  - je Name allein: 10 Fehlversuche, dann 30 Minuten gesperrt.
+        //  - je Name allein: 10 Fehlversuche, dann gesperrt (Kinder 5, sonst 30 Minuten;
+        //    aufheben unter „Benutzer“ → Person → „Sperre aufheben“).
         //    Diese Sperre hängt NICHT an der IP-Adresse und lässt sich daher
         //    nicht mit gefälschten Absenderangaben umgehen.
         // Children's passwords are deliberately simple — hence a two-fold throttle:
         //  - per name and device: 6 attempts, then a 1-minute pause
-        //  - per name alone: 10 failed attempts, then locked for 30 minutes.
+        //  - per name alone: 10 failed attempts, then locked (children 5, others 30 minutes;
+        //    lift under "Users" → person → "Lift lock").
         //    This lock does NOT depend on the IP address and therefore
         //    cannot be bypassed with forged sender details.
         $keyDevice = 'sign-in:' . $data['username'] . '|' . $request->ip();
         $keyName = self::lockKey($data['username']);
+        $user = User::where('username', $data['username'])->first();
+        $pupil = $user && $user->isLocal() && $user->isPupil();
+
+        // Kind, dessen Klasse gerade keine Sitzung hat: sofort dieselbe Meldung, ohne das
+        // Passwort zu prüfen und ohne Fehlversuch. Sonst verriete die Meldung, ob das
+        // Passwort stimmte, und Mitschüler könnten sich außerhalb des Unterrichts aussperren.
+        // Child whose class has no session right now: the same message at once, without
+        // checking the password and without a failed attempt. Otherwise the message would
+        // reveal whether the password was right, and classmates could lock each other out.
+        if ($pupil && SessionRequirement::appliesTo($user) && ! SessionRequirement::runningFor($user)) {
+            return $this->withoutSession();
+        }
+
         foreach ([[$keyName, 10], [$keyDevice, 6]] as [$key, $max]) {
             if (RateLimiter::tooManyAttempts($key, $max)) {
                 $sec = RateLimiter::availableIn($key);
                 return back()->withErrors(['username' => $sec > 120
-                    ? __('Zu viele falsche Versuche. Dieses Konto ist für :n Minuten gesperrt — deine Lehrkraft kann das Passwort zurücksetzen.', ['n' => (int) ceil($sec / 60)])
+                    ? ($pupil
+                        ? __('Zu viele falsche Versuche. Dieses Konto ist für :n Minuten gesperrt. Deine Lehrkraft kann die Sperre aufheben.', ['n' => (int) ceil($sec / 60)])
+                        : __('Zu viele falsche Versuche. Dieses Konto ist für :n Minuten gesperrt. Ein Admin kann die Sperre aufheben.', ['n' => (int) ceil($sec / 60)]))
                     : __('Zu viele Versuche. Bitte warte :n Sekunden.', ['n' => $sec])])
                     ->onlyInput('username');
             }
         }
 
-        $fail = function (string $message) use ($keyDevice, $keyName) {
+        // Kinder sind nach 10 Fehlversuchen 5 Minuten gesperrt, alle anderen 30 Minuten
+        // Children are locked for 5 minutes after 10 failed attempts, everyone else for 30 minutes
+        $fail = function (string $message) use ($keyDevice, $keyName, $pupil) {
             RateLimiter::hit($keyDevice, 60);
-            RateLimiter::hit($keyName, 1800);
+            RateLimiter::hit($keyName, $pupil ? 300 : 1800);
             return back()->withErrors(['username' => $message])->onlyInput('username');
         };
 
-        $user = User::where('username', $data['username'])->first();
         if ($user && $user->isLocal()) {
             // Eigenes Konto: Passwort prüfen
             // Own account: check password
@@ -92,6 +110,11 @@ class AuthController extends Controller
             if (! $user instanceof User) {
                 return $user;   // Antwort mit Fehlermeldung / response with error message
             }
+        }
+        // Gesperrtes Konto (Benutzer → „Konto aktiv“): eigene Konten und Schulkonten gleich
+        // Locked account (Users → “Account active”): own accounts and school accounts alike
+        if (! $user->active) {
+            return $fail(__('Dieses Konto ist gesperrt. Frag den Admin.'));
         }
         RateLimiter::clear($keyDevice);
         RateLimiter::clear($keyName);
@@ -118,14 +141,18 @@ class AuthController extends Controller
 
     /**
      * Anmeldung über das Schulverzeichnis: Konto beim ersten Mal anlegen,
-     * Rolle aus den Gruppen (Admin-Gruppe → Admin, sonst Lehrkraft; mit
-     * gesetzter Lehrkräfte-Gruppe nur deren Mitglieder). Liefert den
-     * Benutzer oder eine Antwort mit Fehlermeldung.
+     * Rolle aus den Gruppen (Admin-Gruppe → Admin, Lehrkräfte-Gruppe →
+     * Lehrkraft). Wer in keiner der beiden Gruppen ist, kommt nicht hinein –
+     * auch nicht, wenn die Lehrkräfte-Gruppe leer ist: Schulverzeichnisse
+     * enthalten oft auch Schülerkonten, die sonst Lehrkraft würden. Liefert
+     * den Benutzer oder eine Antwort mit Fehlermeldung.
      *
      * Sign-in via the school directory: create the account the first time,
-     * role from the groups (admin group → admin, otherwise teacher; with a
-     * teachers group set, only its members). Returns the
-     * user or a response with an error message.
+     * role from the groups (admin group → admin, teachers group → teacher).
+     * Whoever is in neither group does not get in – also not if the teachers
+     * group is empty: school directories often contain pupil accounts too,
+     * which would otherwise become teachers. Returns the user or a response
+     * with an error message.
      */
     private function fromDirectory(string $username, string $password, callable $fail)
     {
@@ -146,7 +173,7 @@ class AuthController extends Controller
         $groups = $this->groups = $entry['groups'];
         $admin = Directory::isMemberOf($groups, Setting::get('ldap_group_admin'));
         $teacherGroup = Setting::get('ldap_group_teacher');
-        if (! $admin && $teacherGroup && ! Directory::isMemberOf($groups, $teacherGroup)) {
+        if (! $admin && (blank($teacherGroup) || ! Directory::isMemberOf($groups, $teacherGroup))) {
             RateLimiter::hit(self::lockKey($username), 1800);
             return back()->withErrors(['username' => __('Dein Schulkonto ist für BilDaBooky nicht freigeschaltet. Frag den Admin.')])->onlyInput('username');
         }
@@ -380,6 +407,10 @@ class AuthController extends Controller
 
     private function finish(Request $request, User $user, ?ClassSession $session = null)
     {
+        // zwischen Passwort und Code gesperrt / locked between password and code
+        if (! $user->active) {
+            return redirect()->route('login')->withErrors(['username' => __('Dieses Konto ist gesperrt. Frag den Admin.')]);
+        }
         // vor der Anmeldung gewählte Sprache übernehmen
         // adopt the language chosen before sign-in
         if (! $user->locale && $request->session()->has('locale')) {

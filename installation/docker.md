@@ -127,8 +127,8 @@ Ausführlich – auch für Nginx Proxy Manager und nginx: [reverse-proxy.md](rev
 - Updates, Sicherung und Wiederherstellung:
   [betrieb.md](betrieb.md)
 - Der zweite Container `bildabooky-scheduler` erledigt die nächtliche
-  Sicherung (2:30 Uhr) und den Sommerferienmodus (3:00 Uhr). Er muss
-  mitlaufen.
+  Sicherung (2:30 Uhr), das Löschen entfernter Fotos und Töne nach 30 Tagen
+  (3:10 Uhr) und den Sommerferienmodus (3:00 Uhr). Er muss mitlaufen.
 
 ## Ausprobieren ohne Compose
 

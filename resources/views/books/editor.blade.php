@@ -51,11 +51,11 @@
 
         <aside class="ed-properties" id="ed-properties" hidden></aside>
 
-        @if(auth()->user()->showsFox())
-            {{-- Fuchs unten in der rechten Spalte (Handy: über den Werkzeugen)
+        @if(auth()->user()->showsCompanion())
+            {{-- Cara unten in der rechten Spalte (Handy: über den Werkzeugen)
 
-                 Fox helper at the bottom of the right column (phone: above the tools) --}}
-            @include('partials.fox', ['foxBook' => $book])
+                 Cara at the bottom of the right column (phone: above the tools) --}}
+            @include('partials.companion', ['companionBook' => $book])
         @endif
     </div>
 
@@ -105,7 +105,9 @@
             <button type="button" class="share-button" data-level="class">👥 {{ __('Mit der Klasse teilen') }}</button>
         </div>
         <p class="hint">
-            @if($rights['othersBook']){{ __('Bestimmt, wer außer :name das Buch sieht. Als Lehrkraft siehst du es immer.', ['name' => $book->owner->first_name]) }}
+            @if($rights['othersBook'] && $book->isTeachersOwn()){{ __('Bestimmt, wer außer :name das Buch sieht. Als Admin siehst du es immer.', ['name' => $book->owner->first_name]) }}
+            @elseif($rights['othersBook']){{ __('Bestimmt, wer außer :name das Buch sieht. Als Lehrkraft siehst du es immer.', ['name' => $book->owner->first_name]) }}
+            @elseif($book->isTeachersOwn()){{ __('Nochmal tippen hebt das Teilen auf. Ohne Teilen sehen nur du und die Admins dieses Buch. „Mit der Lehrkraft“ zeigt es den anderen Lehrkräften der Klasse, „Mit der Klasse“ auch den Kindern.') }}
             @else{{ __('Nochmal tippen hebt das Teilen auf. Ohne Teilen sehen nur du und deine Lehrkraft dein Buch.') }}@endif
         </p>
     @endif

@@ -124,9 +124,14 @@ class ClassController extends Controller
         return redirect()->route('classes.edit', $schoolClass)->with('ok', __('Fächer und Lehrkräfte der Klasse :name gespeichert.', ['name' => $schoolClass->name]));
     }
 
+    /**
+     * Dürfen sich Lehrkräfte selbst in Klassen eintragen? Ab Werk nein (seit 20.11.2026)
+     *
+     * May teachers enter themselves into classes? Off by default (since 20.11.2026)
+     */
     public static function joiningAllowed(): bool
     {
-        return \App\Models\Setting::get('teachers_can_join', '1') === '1';
+        return \App\Models\Setting::get('teachers_can_join', '0') === '1';
     }
 
     /**
@@ -138,7 +143,9 @@ class ClassController extends Controller
     {
         $user = $request->user();
         $joined = in_array($schoolClass->id, $user->teachingClassIds(), true);
-        abort_unless($joined || self::joiningAllowed(), 403);
+        // Admins ordnen ohnehin alles zu, der Schalter gilt nur für Lehrkräfte
+        // Admins assign everything anyway, the switch applies to teachers only
+        abort_unless($joined || $user->isAdmin() || self::joiningAllowed(), 403);
         $teaching = $schoolClass->teaching();
         $names = User::whereIn('id', collect($teaching)->flatten()->unique())->get()->keyBy('id');
         return view('manage.class-join', [
@@ -152,7 +159,7 @@ class ClassController extends Controller
     public function saveJoin(Request $request, SchoolClass $schoolClass)
     {
         $user = $request->user();
-        abort_unless(in_array($schoolClass->id, $user->teachingClassIds(), true) || self::joiningAllowed(), 403);
+        abort_unless(in_array($schoolClass->id, $user->teachingClassIds(), true) || $user->isAdmin() || self::joiningAllowed(), 403);
         $allowed = $schoolClass->subjects()->pluck('subjects.id')->map(fn ($v) => (int) $v)->all();
         $data = $request->validate(['subjects' => ['array'], 'subjects.*' => ['integer', \Illuminate\Validation\Rule::in($allowed)]]);
         DB::transaction(function () use ($user, $schoolClass, $data) {

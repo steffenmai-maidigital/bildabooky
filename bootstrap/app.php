@@ -29,8 +29,15 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
-            // Merkt den Anlass einer Aktion fürs passende Lob von Rua / remembers the occasion of an action for Rua's fitting praise
-            \App\Http\Middleware\FoxOccasion::class,
+            // Gesperrte Konten verlieren ihre Sitzung bei der nächsten Anfrage
+            // Locked accounts lose their session with the next request
+            \App\Http\Middleware\EnsureActiveAccount::class,
+            // Passwortwechsel beendet die anderen Sitzungen der Person
+            // A password change ends the person's other sessions
+            \App\Http\Middleware\AuthenticateSession::class,
+            // Merkt die Art einer Aktion, damit Cara danach sagt, was geschehen ist
+            // Remembers the kind of an action so that Cara then says what happened
+            \App\Http\Middleware\CompanionOccasion::class,
         ]);
 
         // Sprache vor dem Laden der Modelle aus der URL setzen — sonst erscheint

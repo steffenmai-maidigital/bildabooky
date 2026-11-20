@@ -11,6 +11,8 @@ class Page extends Model
 
     public const FONTS = ['sans', 'rounded', 'serif', 'hand', 'heavy'];
     public const SHAPES = ['rectangle', 'rounded', 'circle'];
+    // Arten von Elementen auf einer Seite / kinds of elements on a page
+    public const TYPES = ['text', 'image', 'audio', 'sticker', 'shape'];
 
     /**
      * Schrift- und Formwerte vor Standard 10 (z. B. aus einem noch offenen Editor) → neue Werte
@@ -28,6 +30,23 @@ class Page extends Model
     {
         $list = json_decode($this->elements ?? '[]', true);
         return is_array($list) ? $list : [];
+    }
+
+    /**
+     * IDs der Medien (Foto, Zeichnung, Ton), die auf dieser Seite stehen (als Schlüssel)
+     *
+     * IDs of the media (photo, drawing, sound) placed on this page (as keys)
+     */
+    public function mediaIds(): array
+    {
+        $ids = [];
+        foreach ($this->elementList() as $e) {
+            if (is_array($e) && isset($e['media']) && is_numeric($e['media'])) {
+                $ids[(int) $e['media']] = true;
+            }
+        }
+
+        return $ids;
     }
 
     public function toEditorArray(): array
@@ -64,7 +83,9 @@ class Page extends Model
      */
     public static function sanitizeElement($e): ?array
     {
-        if (! is_array($e) || ! isset($e['type'])) {
+        // nur bekannte Arten als Text; „type: true“ träfe sonst über den losen Vergleich „text“
+        // only known kinds as a string; "type: true" would otherwise match "text" via loose comparison
+        if (! is_array($e) || ! is_string($e['type'] ?? null) || ! in_array($e['type'], self::TYPES, true)) {
             return null;
         }
         $id = is_string($e['id'] ?? null) && preg_match('/^[A-Za-z0-9_-]{1,40}$/', $e['id'])

@@ -14,6 +14,8 @@
     const h = BDB.height(book.format);
     let nr = Math.max(0, Math.min(book.pages.length - 1, (parseInt(location.hash.slice(1), 10) || 1) - 1));
 
+    // direction nur beim Blättern; nur dann antwortet Cara (nicht beim Laden oder Größe ändern)
+    // direction only when turning pages; only then Cara replies (not on loading or resizing)
     function show(direction) {
         BDB.stopAudio();
         const spaceW = stage.clientWidth - 16;
@@ -29,11 +31,11 @@
         next.disabled = nr === book.pages.length - 1;
         if (!book.standalone) history.replaceState(null, '', '#' + (nr + 1));
 
-        // Fuchs-Helfer (falls da): Ton auf der Seite, Ende des Buchs
-        // Fox helper (if present): sound on the page, end of the book
-        if (window.FoxEvents) {
-            if (nr === book.pages.length - 1 && book.pages.length > 1) window.FoxEvents.event('end');
-            else if ((book.pages[nr].elements || []).some((e) => e.type === 'audio')) window.FoxEvents.event('page_audio');
+        // Cara (falls da) nach dem Blättern: Ton auf der Seite, Ende des Buchs
+        // Cara (if present) after turning a page: sound on the page, end of the book
+        if (direction && window.CompanionEvents) {
+            if (nr === book.pages.length - 1 && book.pages.length > 1) window.CompanionEvents.event('end');
+            else if ((book.pages[nr].elements || []).some((e) => e.type === 'audio')) window.CompanionEvents.event('page_audio');
         }
     }
 

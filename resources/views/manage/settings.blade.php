@@ -77,7 +77,7 @@
             @php($v = $summer['preview'])
             <div class="flash info" style="margin-top:.8rem">
                 <b>{{ __('Würde jetzt gelöscht:') }}</b>
-                {{ __(':kinder Schülerkonten, :buecher Bücher, :medien Fotos und Tonaufnahmen', ['kinder' => $v['pupils'], 'buecher' => $v['books'], 'medien' => $v['media']]) }}@if($v['classes']), {{ __(':n Klassen', ['n' => $v['classes']]) }}@endif.
+                {{ trans_choice(':n Schülerkonto|:n Schülerkonten', $v['pupils'], ['n' => $v['pupils']]) }}, {{ trans_choice(':n Buch|:n Bücher', $v['books'], ['n' => $v['books']]) }}, {{ trans_choice(':n Foto oder Tonaufnahme|:n Fotos und Tonaufnahmen', $v['media'], ['n' => $v['media']]) }}@if($v['classes']), {{ trans_choice(':n Klasse|:n Klassen', $v['classes'], ['n' => $v['classes']]) }}@endif.
             </div>
             <ul class="hint">
                 <li>{{ __('Unmittelbar vorher wird automatisch eine Sicherung im Ordner „backups“ angelegt; sie wird wie alle Sicherungen nach der eingestellten Frist gelöscht.') }}</li>
@@ -93,10 +93,10 @@
         </div>
 
         <div class="panel">
-            <h2 style="margin-top:0">7 · 🦊 {{ __('Fuchs-Helfer') }}</h2>
-            <p>{{ __('Ein freundlicher Fuchs unten rechts begrüßt, lobt und gibt Tipps — passend für Kinder, Lehrkräfte und Admins.') }}</p>
-            <label class="check"><input type="checkbox" name="fox_enabled" value="1" @checked(old('fox_enabled', \App\Models\Setting::get('fox_enabled', '1') === '1'))> <b>{{ __('Fuchs für alle anzeigen') }}</b></label>
-            <p class="hint">{{ __('Ausgeschaltet ist er für niemanden sichtbar. Eingeschaltet kann ihn jede Person unter „Konto“ für sich selbst ausblenden.') }}</p>
+            <h2 style="margin-top:0">7 · 🐈 Cara</h2>
+            <p>{{ __('Cara ist eine schwarze Katze. Sie schläft unten rechts, bis man sie antippt. Dann gibt sie Tipps passend zu Rolle und Seite. Nach dem Speichern sagt sie kurz, was geschehen ist.') }}</p>
+            <label class="check"><input type="checkbox" name="companion_enabled" value="1" @checked(old('companion_enabled', \App\Support\Companion::enabled()))> <b>{{ __('Cara für alle anzeigen') }}</b></label>
+            <p class="hint">{{ __('Ausgeschaltet sieht sie niemand. Eingeschaltet kann jede Person sie unter „Konto“ für sich ausblenden.') }}</p>
         </div>
 
 
@@ -124,7 +124,8 @@
                 @endforeach
             </div>
             <label for="mfa_required_groups">{{ __('Gruppen im Schulverzeichnis mit Pflicht (eine je Zeile, DN oder Name)') }}</label>
-            <textarea id="mfa_required_groups" name="mfa_required_groups" rows="2" placeholder="Schulleitung&#10;CN=IT-Admins,OU=Gruppen,DC=schule,DC=local">{{ old('mfa_required_groups', \App\Models\Setting::get('mfa_required_groups')) }}</textarea>
+            <textarea id="mfa_required_groups" name="mfa_required_groups" rows="2" @error('mfa_required_groups') aria-invalid="true" @enderror placeholder="Schulleitung&#10;CN=IT-Admins,OU=Gruppen,DC=schule,DC=local">{{ old('mfa_required_groups', \App\Models\Setting::get('mfa_required_groups')) }}</textarea>
+            @error('mfa_required_groups')<p class="field-error" role="alert">{{ $message }}</p>@enderror
             <p class="hint">{{ __('Mitglieder dieser Gruppen müssen den zweiten Faktor einrichten. Wirkt ab der nächsten Anmeldung.') }}</p>
         </div>
 
@@ -150,12 +151,18 @@
             <input type="text" id="ldap_base_dn" name="ldap_base_dn" value="{{ old('ldap_base_dn', $directory['base_dn']) }}" placeholder="DC=schule,DC=local" autocapitalize="none" spellcheck="false">
             <div class="row">
                 <div><label for="ldap_bind_dn">{{ __('Servicekonto (DN oder Anmeldename, nur lesend)') }}</label><input type="text" id="ldap_bind_dn" name="ldap_bind_dn" value="{{ old('ldap_bind_dn', $directory['bind_dn']) }}" placeholder="CN=svc-bildabooky,OU=Service,DC=schule,DC=local" autocomplete="off"></div>
-                <div><label for="ldap_bind_password">{{ __('Passwort des Servicekontos') }} <span class="hint">({{ __('leer lassen = unverändert') }})</span></label><input type="password" id="ldap_bind_password" name="ldap_bind_password" value="" autocomplete="new-password"></div>
+                <div><label for="ldap_bind_password">{{ __('Passwort des Servicekontos') }} <span class="hint">({{ __('leer lassen = unverändert; nach einem Serverwechsel neu eingeben') }})</span></label><input type="password" id="ldap_bind_password" name="ldap_bind_password" value="" autocomplete="new-password"></div>
             </div>
             <div class="row">
-                <div><label for="ldap_group_teacher">{{ __('Gruppe der Lehrkräfte (DN oder Name, leer = alle dürfen)') }}</label><input type="text" id="ldap_group_teacher" name="ldap_group_teacher" value="{{ old('ldap_group_teacher', \App\Models\Setting::get('ldap_group_teacher')) }}" placeholder="Lehrkraefte"></div>
-                <div><label for="ldap_group_admin">{{ __('Gruppe der Admins (DN oder Name)') }}</label><input type="text" id="ldap_group_admin" name="ldap_group_admin" value="{{ old('ldap_group_admin', \App\Models\Setting::get('ldap_group_admin')) }}" placeholder="BilDaBooky-Admins"></div>
+                <div><label for="ldap_group_teacher">{{ __('Gruppe der Lehrkräfte (DN oder Name)') }}</label><input type="text" id="ldap_group_teacher" name="ldap_group_teacher" value="{{ old('ldap_group_teacher', \App\Models\Setting::get('ldap_group_teacher')) }}" placeholder="Lehrkraefte" @error('ldap_group_teacher') aria-invalid="true" aria-describedby="ldap_group_teacher-error" @enderror>
+                    @error('ldap_group_teacher')<p class="field-error" id="ldap_group_teacher-error" role="alert">{{ $message }}</p>@enderror</div>
+                <div><label for="ldap_group_admin">{{ __('Gruppe der Admins (DN oder Name)') }}</label><input type="text" id="ldap_group_admin" name="ldap_group_admin" value="{{ old('ldap_group_admin', \App\Models\Setting::get('ldap_group_admin')) }}" placeholder="BilDaBooky-Admins" @error('ldap_group_admin') aria-invalid="true" aria-describedby="ldap_group_admin-error" @enderror>
+                    @error('ldap_group_admin')<p class="field-error" id="ldap_group_admin-error" role="alert">{{ $message }}</p>@enderror</div>
             </div>
+            <p class="hint">{{ __('Mit dem Schulkonto melden sich nur Mitglieder dieser beiden Gruppen an. Ohne Gruppe der Lehrkräfte lässt sich das Verzeichnis nicht einschalten.') }}</p>
+            @if($directory['enabled'] && blank(\App\Models\Setting::get('ldap_group_teacher')))
+                <p class="flash err">{{ __('Die Gruppe der Lehrkräfte fehlt. Bis sie eingetragen ist, kommen mit dem Schulkonto nur Mitglieder der Admin-Gruppe hinein.') }}</p>
+            @endif
             <details style="margin-top:.6rem">
                 <summary style="cursor:pointer">{{ __('Weitere Angaben (meist nicht nötig)') }}</summary>
                 <div class="row">

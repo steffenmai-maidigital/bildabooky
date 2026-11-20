@@ -79,9 +79,14 @@ class HelpController extends Controller
         return view('help-doc', ['title' => $title, 'html' => $html, 'doc' => $doc, 'docs' => self::DOCS, 'isAdmin' => $request->user()->isAdmin()]);
     }
 
-    /** Admin: Anwendungsprotokoll leeren / Admin: clear the application log */
-    public function clearLog()
+    /**
+     * Admin: Anwendungsprotokoll leeren (Rechte in Middleware und hier, Standard 06)
+     *
+     * Admin: clear the application log (permission in the middleware and here, standard 06)
+     */
+    public function clearLog(Request $request)
     {
+        abort_unless($request->user()?->isAdmin(), 403);
         ErrorLog::clear();
 
         return redirect()->route('help')->with('ok', __('Das Protokoll wurde geleert.'));

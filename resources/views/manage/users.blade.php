@@ -42,7 +42,8 @@
                     <td><b>{{ $u->last_name }}</b>{{ $u->last_name ? ',' : '' }} {{ $u->first_name }}
                         @if($u->hasTwoFactor()) <span title="{{ __('Zwei-Faktor aktiv') }}">🔐</span>@endif
                         @unless($u->isLocal()) <span class="badge kind" title="{{ __('Meldet sich mit dem Schulkonto an') }}">🏫 {{ __('Schulkonto') }}</span>@endunless
-                        @if($u->hasCard()) <span title="{{ __('Anmeldekarte hinterlegt') }}">🪪</span>@endif</td>
+                        @if($u->hasCard()) <span title="{{ __('Anmeldekarte hinterlegt') }}">🪪</span>@endif
+                        @unless($u->active) <span class="badge locked" title="{{ __('Anmeldung nicht möglich') }}">⛔ {{ __('Konto gesperrt') }}</span>@endunless</td>
                     <td><code>{{ $u->username }}</code></td>
                     <td><span class="badge {{ $u->role }}">{{ $u->roleLabel() }}</span></td>
                     <td>{{ $u->isTeacher() ? $u->ledClasses->pluck('name')->join(', ') : $u->schoolClass?->name }}</td>

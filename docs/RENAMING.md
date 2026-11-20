@@ -16,9 +16,10 @@ keep working, and what the browser stored under old names is taken over once.
 Session keys were simply renamed: everybody is signed out once after the
 update.
 
-Shared building blocks (Directory, Mfa, TwoFactor, Fox, LegalPages,
-ErrorPage, ErrorLog, Totp, `fox.js`, `symbols.js`) use the same
-names in CrewGate, LinkHub and BilDaBooky.
+Shared building blocks (Directory, Mfa, TwoFactor, LegalPages,
+ErrorPage, ErrorLog, Totp, `symbols.js`) use the same
+names in CrewGate, LinkHub and BilDaBooky (until November 2026 also the fox
+helper `Fox`, `fox.js`; see the last section).
 
 ## Files and folders
 
@@ -235,6 +236,31 @@ and `BDB.LEGACY` in `book.js`.
 | `php artisan verzeichnis:extern` | `directory:isolated` (internal, no alias) |
 | GitHub workflow inputs `veroeffentlichen`, `abbild` | `publish`, `image` |
 | entrypoint function `rechte`, variable `ALT_KEY` | `permissions`, `OLD_KEY` |
+
+## Fox helper → companion (November 2026)
+
+The fox helper “Rua” was replaced by the companion **Cara**, a black cat
+([CARA.md](CARA.md)). The identifiers are neutral now, so a later change of
+character needs no renaming. Existing installations need nothing: the
+migration `database/migrations/0001_01_01_001400_rename_fox_to_companion.php`
+renames the column and the setting and keeps every value (whoever had the fox
+switched off has Cara off; a central “off” stays off). The browser takes over
+“put to sleep” and the position once and deletes the other old keys.
+
+| old | new |
+|---|---|
+| `app/Support/Fox.php` (`Fox::guest()`, `Fox::data()`) | `app/Support/Companion.php` (`Companion::guest()`, `Companion::data()`, `Companion::enabled()`) |
+| `app/Http/Middleware/FoxOccasion.php`, session key `fox_occasion` | `CompanionOccasion.php`, `companion_occasion` (values `serious`, `saved`, `done`, `back`) |
+| `resources/views/partials/fox.blade.php` (`$foxMode`, `$foxBook`) | `partials/companion.blade.php` (`$companionMode`, `$companionBook`) |
+| `public/js/fox.js`, `fox-book.js`, `window.FoxEvents.event()` | `public/js/companion.js`, `companion-book.js`, `window.CompanionEvents.event()` |
+| CSS `.fox*`, `.f-*`; `id="fox"`, `data-fox`, `data-no-fox` | `.companion*`, drawing parts `k-*`; `id="companion"`, `data-companion` (`data-no-fox` is gone: there is no waiting line any more) |
+| column `users.fox`, setting `fox_enabled` | `users.companion`, `companion_enabled` |
+| `User::showsFox()` | `User::showsCompanion()` |
+| `PUT /account/fox` (`account.fox`, `AccountController::fox`, field `fox`) | `PUT /account/companion` (`account.companion`, `AccountController::companion`, field `companion`) |
+| localStorage `bdb-fox-sleep`, `bdb-fox-position`, `bdb-fox-last` | `bdb-companion-sleep`, `bdb-companion-position` (`-position-editor`, `-position-reading`); `bdb-fox-last` is deleted |
+| sessionStorage `bdb-fox-<book>-<key>` | `bdb-companion-<book>-<key>` |
+| data keys `greeting`, `context`, `sayings`, `praise`, `error`, `waiting`, `editor` | `first`, `tips`, `reply`, `events` (no greeting on load, no sayings, no waiting line, no idle hint) |
+| `docs/RUA.md` | `docs/CARA.md` |
 
 ## What stays German on purpose
 

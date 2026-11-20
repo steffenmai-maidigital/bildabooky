@@ -143,7 +143,10 @@
         // Subjects per class (for “New book” and “Move to another subject”)
         (function () {
             const SUBJECTS = @json($subjectsByClass);
-            const ALL = @json($allSubjects->map(fn ($f) => ['id' => $f->id, 'name' => $f->name, 'symbol' => $f->symbol])->values());
+            {{-- Werte erst in eine Variable: @json teilt seinen Ausdruck an Kommas und verlöre sonst die Schutz-Flags (JSON_HEX_TAG …)
+                 values into a variable first: @json splits its expression at commas and would otherwise lose the safety flags (JSON_HEX_TAG …) --}}
+            @php($allSubjectsJs = $allSubjects->map(fn ($f) => ['id' => $f->id, 'name' => $f->name, 'symbol' => $f->symbol])->values())
+            const ALL = @json($allSubjectsJs);
             const NONE = @json('🗂️ ' . __('Ohne Fach'));
             const DEFAULT_CLASS = @json($user->isPupil() ? $user->school_class_id : null);
             function fill(select, classId, value) {

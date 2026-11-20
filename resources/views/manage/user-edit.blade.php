@@ -27,13 +27,21 @@
                 <button>🔑 {{ __('Passwort zurücksetzen') }}</button>
             </form>
             @endif
+            @php($lockKey = \App\Http\Controllers\AuthController::lockKey($user->username))
+            @if(! $user->is($actor) && \Illuminate\Support\Facades\RateLimiter::tooManyAttempts($lockKey, 10))
+                <div><b>⛔ {{ __('Anmeldung gesperrt') }}</b>
+                    <p class="hint">{{ __('Nach zu vielen falschen Passwörtern noch :n Minuten gesperrt.', ['n' => (int) ceil(\Illuminate\Support\Facades\RateLimiter::availableIn($lockKey) / 60)]) }}</p>
+                    <form method="post" action="{{ route('users.unlock', $user) }}">@csrf<button>🔓 {{ __('Sperre aufheben') }}</button></form></div>
+            @endif
             @if($user->hasCard())
                 <div><b>{{ __('Anmeldekarte') }}</b><p class="hint">{{ __('Ist hinterlegt und kann jederzeit gedruckt werden.') }}</p>
                     <a class="btn" href="{{ route('users.cards', ['user' => $user->id]) }}">🖨 {{ __('Karte drucken') }}</a></div>
             @endif
             <div>
                 <b>{{ __('Zwei-Faktor') }}</b>
-                @if($user->hasTwoFactor())
+                @if($user->is($actor))
+                    <p class="hint">{{ __('Deine eigene Zwei-Faktor-Anmeldung verwaltest du unter „Konto“.') }} <a href="{{ route('account') }}">🔑 {{ __('Konto') }}</a></p>
+                @elseif($user->hasTwoFactor())
                     <p class="hint">{{ __('Aktiv. Zurücksetzen, wenn das Handy verloren ist.') }}</p>
                     <form method="post" action="{{ route('users.2fa', $user) }}" onsubmit="return confirm(@js(__('Zwei-Faktor für :name zurücksetzen?', ['name' => $user->name])))">
                         @csrf @method('delete')<button>🔐 {{ __('Zwei-Faktor zurücksetzen') }}</button></form>

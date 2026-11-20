@@ -122,7 +122,9 @@ Ausführlich – auch für Nginx Proxy Manager und nginx: [reverse-proxy.md](rev
   **`bildabooky_app-storage`**. Beides bleibt bei Neustart und Update
   erhalten.
 - Sicherungen liegen im Ordner `docker/bildabooky/backups` und lassen sich
-  mit **Hyper Backup** zusätzlich auf eine externe Platte sichern.
+  mit **Hyper Backup** zusätzlich auf eine externe Platte sichern. Sie
+  enthalten `.app_key`; die Sicherung zum Herunterladen im Browser nicht
+  (Schlüssel getrennt aufbewahren, siehe [betrieb.md](betrieb.md)).
 - **Update:** Projekt **stoppen** → die neuen Dateien über die alten in
   `docker/bildabooky` entpacken (**eure angepasste `docker-compose.yml`
   vorher sichern und danach zurückkopieren!**) → Projekt → **Aktion →

@@ -18,8 +18,16 @@ the end explains each of them.
 | folder `./backups` | nightly backups as ZIP files |
 
 **`.app_key` matters:** the two-factor secrets and the stored login cards
-are encrypted with it. It is included in every backup, so keep the
-`backups` folder away from prying eyes (share permissions for admins only).
+are encrypted with it. It is included in every backup on the server, so keep
+the `backups` folder away from prying eyes (share permissions for admins
+only); BilDaBooky creates the ZIP files without read access for others
+(`0640`), so use `sudo` to check or copy them on the host. The backup
+downloaded in the browser does **not** contain it. So keep
+the key separately once, e.g. in a password manager:
+
+```bash
+docker exec bildabooky cat /data/.app_key
+```
 
 ## Updates
 
@@ -48,6 +56,12 @@ On every start the app container runs `php artisan app:upgrade`:
 | Backup | Before any change a copy of the database is stored in `/data/backups/` (the 10 newest are kept). |
 | Migrations | New tables and columns are created. |
 | Record | **Help → System** then shows the new version and build number. |
+
+### Notes on individual updates
+
+| From version | What to do |
+|---|---|
+| after 26101802 | **School directory:** the teachers group is now mandatory. If it was empty, enter it under **Settings → 9**. Until then only members of the admins group can sign in with their school account. Own accounts are not affected. |
 
 ### Versions
 
@@ -89,8 +103,9 @@ them).
   `bildabooky-scheduler` into `./backups`
   (`bildabooky_YYYY-MM-DD_hhmmss.zip`). Backups are kept for
   `BACKUP_KEEP_DAYS` days (default 14).
-- **Right away, in the browser:** as an admin under **Classes → Download
-  backup**.
+- **Right away, in the browser:** as an admin under **Classes → Backup**,
+  confirmed with your own password (school accounts: a code from the
+  authenticator app). This file does not contain the app key.
 - **Right away, by command:**
 
   ```bash
@@ -102,7 +117,13 @@ them).
 
 A backup contains `bildabooky.sqlite` (a consistent copy, even while
 running), the folders `medien/` (photos, drawings, sound) and `marke/`
-(school logo), and `.app_key`.
+(school logo), and `.app_key` – the latter only in the backups on the
+server (nightly, by command, before deleting a class, before the summer
+holiday mode), not in the one from the browser.
+
+Photos, drawings and sounds that are no longer on any page of a book are
+deleted by BilDaBooky at night after 30 days (`bildabooky:prune-media`).
+Older backups still contain them.
 
 ## Restoring
 
@@ -117,7 +138,7 @@ docker run --rm -v bildabooky_app-data:/data -v "$PWD/backups:/backups:ro" alpin
   set -e; mkdir /tmp/r && cd /tmp/r && unzip -q /backups/FILE.zip
   rm -f /data/bildabooky.sqlite /data/bildabooky.sqlite-wal /data/bildabooky.sqlite-shm
   cp bildabooky.sqlite /data/ && rm -rf /data/medien && cp -r medien /data/medien
-  cp .app_key /data/.app_key
+  if [ -f .app_key ]; then cp .app_key /data/.app_key; fi
   if [ -d marke ]; then rm -rf /data/marke && cp -r marke /data/marke; fi
   echo restored"
 
@@ -125,6 +146,19 @@ docker compose start
 ```
 
 BilDaBooky fixes the file permissions itself on start.
+
+**Backup from the browser:** it contains no `.app_key`. On the same server
+the existing key simply stays in place. On a new server, put back the key
+you kept separately before `docker compose start` (file `app_key.txt` in the
+folder `bildabooky`):
+
+```bash
+docker run --rm -v bildabooky_app-data:/data -v "$PWD:/k:ro" alpine \
+  cp /k/app_key.txt /data/.app_key
+```
+
+Without the right key everyone has to set up two-factor sign-in again, and
+login cards need a new password.
 
 **Moving to another server:** set up BilDaBooky there as described in the
 installation guide and start it once, then restore as shown above.
@@ -143,7 +177,20 @@ docker exec bildabooky php artisan bildabooky:admin-password admin --disable-2fa
 ```
 
 The command prints a new starting password that has to be changed at the
-next login.
+next login. It applies to **local** admins (own account in BilDaBooky),
+lifts an account lock and signs the account out on all devices.
+
+**No local admin present** (e.g. all admins come from the school directory,
+and the directory is down): the command then creates a new local admin with
+the given name and prints its starting password. The name must not be taken
+yet:
+
+```bash
+docker exec bildabooky php artisan bildabooky:admin-password notfall
+```
+
+If there are local admins, but none with this name, the command lists the
+existing ones.
 
 ### Wrong domain entered
 
@@ -182,7 +229,8 @@ otherwise it happens again on every start.
 | `php artisan bildabooky:backup` | create a backup right away |
 | `php artisan bildabooky:summer-holiday --preview` | preview what the summer holiday mode would delete |
 | `php artisan bildabooky:summer-holiday --now` | run the summer holiday mode now (asks for confirmation) |
-| `php artisan bildabooky:admin-password admin` | emergency password for an admin (`--disable-2fa` also resets two-factor) |
+| `php artisan bildabooky:admin-password admin` | emergency password for a local admin; creates one if there is none (`--disable-2fa` also resets two-factor) |
+| `php artisan bildabooky:prune-media --dry-run` | shows how many removed photos and sounds are waiting or would be deleted (without `--dry-run`: delete; otherwise runs at night) |
 | `php artisan bildabooky:clear-domain` | remove the domain entered in the settings |
 
 Prefix each with `docker exec bildabooky` (or `docker exec -it` for the

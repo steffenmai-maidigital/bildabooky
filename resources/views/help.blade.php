@@ -14,14 +14,21 @@
             <li>↶ {{ __('Vertippt? Oben auf „Rückgängig“ tippen. Gespeichert wird automatisch.') }}</li>
             <li>📖 {{ __('Mit „Lesen“ blätterst du durch dein Buch und hörst die Töne.') }}</li>
             <li>💾 {{ __('Über „⋯“ beim Buch kannst du es drucken oder als Datei mit nach Hause nehmen.') }}</li>
+            @if($user->isPupil())
+                <li>🔑 {{ __('Unter „Konto“ änderst du dein Passwort und blendest Cara für dich ein oder aus.') }}</li>
+            @endif
+            <li>🌐 {{ __('Oben rechts wählst du die Sprache; ◐ schaltet zwischen hell und dunkel um.') }}</li>
             @if($user->canLead())
                 <li>👥 {{ __('Unter „Benutzer“ legst du ganze Klassenlisten auf einmal an und druckst Anmeldekarten.') }}</li>
                 <li>🏫 {{ __('Unter „Klassen“ findest du die Bücher deiner Klasse, schaltest die Anmeldung frei und kannst Karten neu drucken.') }}</li>
-                <li>🔐 {{ __('Unter „Konto“ richtest du die Zwei-Faktor-Anmeldung ein und schaltest den Fuchs für dich ein oder aus.') }}</li>
+                <li>🔐 {{ __('Unter „Konto“ richtest du die Zwei-Faktor-Anmeldung ein und blendest Cara für dich ein oder aus.') }}</li>
+                <li>📘 {{ __('Deine eigenen Bücher (keine Klassenbücher und Aufgaben) sehen nur du und die Admins, bis du sie teilst.') }}</li>
                 <li>🔒 {{ __('Kamera und Mikrofon funktionieren nur, wenn BilDaBooky über https:// aufgerufen wird.') }}</li>
             @endif
             @if($user->isAdmin())
                 <li>🎨 {{ __('Unter „Einstellungen“ pflegst du Schule, Domain, Farben, Logo, Anmeldung (Sitzungspflicht, Zwei-Faktor), Schulverzeichnis und Sommerferienmodus.') }}</li>
+                <li>⛔ {{ __('Unter „Benutzer“ sperrst du Konten von Lehrkräften und Admins mit dem Haken „Konto aktiv“.') }}</li>
+                <li>💾 {{ __('Unter „Klassen“ lädst du eine Sicherung herunter. Du bestätigst mit deinem Passwort; den App-Schlüssel enthält die Datei nicht.') }}</li>
             @endif
         </ul>
         <p class="hint" style="margin-bottom:0">{{ __('Ausführlich im') }} <a href="{{ route('help.doc', 'user') }}">{{ __('Benutzerhandbuch') }}</a>.</p>

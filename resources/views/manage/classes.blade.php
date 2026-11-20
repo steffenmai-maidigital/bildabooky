@@ -117,10 +117,23 @@
         </div>
     @endif
     @if($actor->isAdmin())
-        <div class="panel">
+        <div class="panel" id="backup">
             <h2 style="margin-top:0">💾 {{ __('Sicherung') }}</h2>
             <p>{{ __('Jede Nacht um 2:30 Uhr wird automatisch gesichert (Ordner „backups“). Hier gibt es eine Sicherung sofort zum Herunterladen:') }}</p>
-            <a class="btn" href="{{ route('backup') }}">💾 {{ __('Sicherung herunterladen') }}</a>
+            {{-- Download nur per Formular mit Passwort bzw. App-Code (BackupController), ohne App-Schlüssel
+
+                 Download only via a form with password or app code (BackupController), without the app key --}}
+            <p class="hint">🔑 {{ __('Der App-Schlüssel steckt nicht in dieser Datei. Er liegt auf dem Server in /data/.app_key und gehört getrennt aufbewahrt, etwa im Passwortmanager. Die Sicherungen auf dem Server (Ordner „backups“) enthalten ihn. Ohne den Schlüssel lassen sich nach einer Wiederherstellung die Zwei-Faktor-Anmeldung und die Anmeldekarten nicht mehr lesen.') }}</p>
+            @if(\App\Support\AccountConfirmation::possibleFor($actor))
+                <form method="post" action="{{ route('backup') }}" style="max-width:420px">
+                    @csrf
+                    <label for="backup-password">{{ $actor->isLocal() ? __('Zur Bestätigung dein Passwort') : __('Zur Bestätigung ein aktueller Code aus der App') }}</label>
+                    <div class="row"><input type="password" id="backup-password" name="password" required autocomplete="current-password">
+                        <button class="auto">💾 {{ __('Sicherung herunterladen') }}</button></div>
+                </form>
+            @else
+                <p>{{ __('Für die Sicherung zum Herunterladen brauchst du die Zwei-Faktor-Anmeldung. Richte sie unter „Konto“ ein.') }} <a href="{{ route('account') }}">🔑 {{ __('Konto') }}</a></p>
+            @endif
         </div>
     @endif
 @endsection

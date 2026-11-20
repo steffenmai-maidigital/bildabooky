@@ -1,6 +1,6 @@
 <div class="reader">
     <div class="reader-header">
-        @unless($standalone)<a href="{{ route('home') }}">‹ {{ __('Bibliothek') }}</a>@else<span></span>@endunless
+        @unless($standalone)<a href="{{ route('home') }}" title="{{ __('Bibliothek') }}">‹ <span class="reader-word">{{ __('Bibliothek') }}</span></a>@else<span></span>@endunless
         <b>{{ $book->title }} <span style="opacity:.6;font-weight:500">· {{ $book->owner->first_name }}</span></b>
         <span style="display:flex;gap:.4rem">
             @unless($standalone)@include('partials.session-clock')@endunless
@@ -11,13 +11,13 @@
                       onsubmit="return confirm(@js($at ? __('Abgabe zurücknehmen? Deine Lehrkraft sieht dann wieder, dass du noch arbeitest.') : __('Buch jetzt abgeben? Deine Lehrkraft sieht dann, dass du fertig bist. Du kannst danach trotzdem weiterarbeiten.')))">
                     @csrf
                     <input type="hidden" name="done" value="{{ $at ? 0 : 1 }}">
-                    <button class="{{ $at ? 'submitted' : '' }}" title="{{ $at ? __('Abgegeben am :datum. Antippen, um die Abgabe zurückzunehmen.', ['datum' => $at]) : __('Abgeben') }}">{{ $at ? '📬 ' . __('Abgegeben') : '✅ ' . __('Abgeben') }}</button>
+                    <button class="{{ $at ? 'submitted' : '' }}" title="{{ $at ? __('Abgegeben am :datum. Antippen, um die Abgabe zurückzunehmen.', ['datum' => $at]) : __('Abgeben') }}">{{ $at ? '📬' : '✅' }} <span class="reader-word">{{ $at ? __('Abgegeben') : __('Abgeben') }}</span></button>
                 </form>
             @endif
             @if(! $standalone && ($canReturn ?? false))
-                <button type="button" class="reader-return" data-return="{{ route('books.return', $book) }}" data-name="{{ $book->owner->first_name }}">↩️ {{ __('Zurückgeben') }}</button>
+                <button type="button" class="reader-return" data-return="{{ route('books.return', $book) }}" data-name="{{ $book->owner->first_name }}" title="{{ __('Zurückgeben') }}">↩️ <span class="reader-word">{{ __('Zurückgeben') }}</span></button>
             @endif
-            @if($canEdit)<a href="{{ route('books.edit', $book) }}">✏️ {{ __('Bearbeiten') }}</a>@endif
+            @if($canEdit)<a href="{{ route('books.edit', $book) }}" title="{{ __('Bearbeiten') }}">✏️ <span class="reader-word">{{ __('Bearbeiten') }}</span></a>@endif
         </span>
     </div>
     @if(! $standalone && ($canSubmit ?? false) && $book->isReturned())

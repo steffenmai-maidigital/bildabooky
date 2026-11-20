@@ -16,9 +16,17 @@ Compose-Projekt `bildabooky` heißt (Ordnername) und im Ordner
 | Ordner `./backups` | nächtliche Sicherungen als ZIP |
 
 **`.app_key` ist wichtig:** Damit sind die Zwei-Faktor-Geheimnisse und die
-hinterlegten Anmeldekarten verschlüsselt. Er ist in jeder Sicherung
-enthalten. Deshalb gehört der Ordner `backups` vor fremden Blicken
-geschützt (Freigaberechte nur für Admins).
+hinterlegten Anmeldekarten verschlüsselt. Er ist in jeder Sicherung auf dem
+Server enthalten. Deshalb gehört der Ordner `backups` vor fremden Blicken
+geschützt (Freigaberechte nur für Admins); BilDaBooky legt die ZIP-Dateien
+ohne Leserecht für andere an (`0640`), zum Prüfen oder Kopieren auf dem Host
+also `sudo` verwenden. Die Sicherung zum Herunterladen im
+Browser enthält ihn **nicht**. Den Schlüssel deshalb einmal getrennt
+aufbewahren, z. B. im Passwortmanager:
+
+```bash
+docker exec bildabooky cat /data/.app_key
+```
 
 ## Updates
 
@@ -47,6 +55,12 @@ Der App-Container führt bei jedem Start `php artisan app:upgrade` aus:
 | Sicherung | Vor jeder Änderung landet eine Kopie der Datenbank in `/data/backups/` (die 10 neuesten bleiben). |
 | Migrationen | Neue Tabellen und Spalten werden angelegt. |
 | Vermerk | Unter **Hilfe → System** stehen danach die neue Version und Build-Nummer. |
+
+### Hinweise zu einzelnen Updates
+
+| Ab Version | Was zu tun ist |
+|---|---|
+| nach 26101802 | **Schulverzeichnis:** Die Gruppe der Lehrkräfte ist jetzt Pflicht. War sie leer, unter **Einstellungen → 9** eintragen. Bis dahin melden sich mit dem Schulkonto nur Mitglieder der Admin-Gruppe an. Eigene Konten sind nicht betroffen. |
 
 ### Versionen
 
@@ -89,8 +103,9 @@ Deshalb alte Abbilder nicht vorschnell aufräumen
   `bildabooky-scheduler` nach `./backups`
   (`bildabooky_JJJJ-MM-TT_hhmmss.zip`). Aufbewahrt werden die Sicherungen
   `BACKUP_KEEP_DAYS` Tage (Standard 14).
-- **Sofort, im Browser:** als Admin unter **Klassen → Sicherung
-  herunterladen**.
+- **Sofort, im Browser:** als Admin unter **Klassen → Sicherung**, mit dem
+  eigenen Passwort bestätigen (Schulkonten: Code aus der
+  Authenticator-App). Diese Datei enthält den App-Schlüssel nicht.
 - **Sofort, per Befehl:**
 
   ```bash
@@ -102,7 +117,13 @@ Deshalb alte Abbilder nicht vorschnell aufräumen
 
 Eine Sicherung enthält: `bildabooky.sqlite` (konsistente Kopie, auch
 während des Betriebs), die Ordner `medien/` (Fotos, Zeichnungen, Ton) und
-`marke/` (Schullogo) sowie `.app_key`.
+`marke/` (Schullogo) sowie `.app_key` – Letzteren nur die Sicherungen auf
+dem Server (nächtlich, per Befehl, vor dem Löschen einer Klasse, vor dem
+Sommerferienmodus), nicht die aus dem Browser.
+
+Fotos, Zeichnungen und Töne, die auf keiner Seite eines Buchs mehr stehen,
+löscht BilDaBooky nachts nach 30 Tagen (`bildabooky:prune-media`). Ältere
+Sicherungen enthalten sie noch.
 
 ## Wiederherstellung
 
@@ -117,7 +138,7 @@ docker run --rm -v bildabooky_app-data:/data -v "$PWD/backups:/backups:ro" alpin
   set -e; mkdir /tmp/r && cd /tmp/r && unzip -q /backups/DATEI.zip
   rm -f /data/bildabooky.sqlite /data/bildabooky.sqlite-wal /data/bildabooky.sqlite-shm
   cp bildabooky.sqlite /data/ && rm -rf /data/medien && cp -r medien /data/medien
-  cp .app_key /data/.app_key
+  if [ -f .app_key ]; then cp .app_key /data/.app_key; fi
   if [ -d marke ]; then rm -rf /data/marke && cp -r marke /data/marke; fi
   echo wiederhergestellt"
 
@@ -125,6 +146,19 @@ docker compose start
 ```
 
 Die Dateirechte setzt BilDaBooky beim Start selbst.
+
+**Sicherung aus dem Browser:** Sie enthält keinen `.app_key`. Auf demselben
+Server bleibt der vorhandene Schlüssel einfach liegen. Auf einem neuen
+Server vor `docker compose start` den getrennt aufbewahrten Schlüssel
+zurückspielen (Datei `app_key.txt` im Ordner `bildabooky`):
+
+```bash
+docker run --rm -v bildabooky_app-data:/data -v "$PWD:/k:ro" alpine \
+  cp /k/app_key.txt /data/.app_key
+```
+
+Ohne den richtigen Schlüssel muss jede Person die Zwei-Faktor-Anmeldung neu
+einrichten, und Anmeldekarten brauchen ein neues Passwort.
 
 **Umzug auf einen anderen Server:** Dort BilDaBooky wie in der
 Installationsanleitung einrichten und einmal starten, dann die
@@ -144,7 +178,21 @@ docker exec bildabooky php artisan bildabooky:admin-password admin --disable-2fa
 ```
 
 Der Befehl zeigt ein neues Startpasswort an, das bei der Anmeldung
-geändert werden muss.
+geändert werden muss. Er gilt für **lokale** Admins (eigenes Konto in
+BilDaBooky), hebt eine Kontosperre auf und meldet das Konto auf allen
+Geräten ab.
+
+**Kein lokaler Admin vorhanden** (z. B. alle Admins kommen aus dem
+Schulverzeichnis, und das Verzeichnis ist ausgefallen): Der Befehl legt
+dann einen neuen lokalen Admin unter dem angegebenen Namen an und zeigt sein
+Startpasswort. Der Name darf noch nicht vergeben sein:
+
+```bash
+docker exec bildabooky php artisan bildabooky:admin-password notfall
+```
+
+Gibt es lokale Admins, aber keinen mit diesem Namen, nennt der Befehl die
+vorhandenen.
 
 ### Falsche Domain eingetragen
 
@@ -183,7 +231,8 @@ sonst passiert es bei jedem Start erneut.
 | `php artisan bildabooky:backup` | Sicherung sofort anlegen |
 | `php artisan bildabooky:summer-holiday --preview` | zeigt, was der Sommerferienmodus löschen würde |
 | `php artisan bildabooky:summer-holiday --now` | Sommerferienmodus sofort ausführen (mit Rückfrage) |
-| `php artisan bildabooky:admin-password admin` | Notfall-Passwort für einen Admin |
+| `php artisan bildabooky:admin-password admin` | Notfall-Passwort für einen lokalen Admin; legt einen an, wenn es keinen gibt (`--disable-2fa` setzt auch Zwei-Faktor zurück) |
+| `php artisan bildabooky:prune-media --dry-run` | zeigt, wie viele entfernte Fotos und Töne warten bzw. gelöscht würden (ohne `--dry-run`: löschen, läuft sonst nachts) |
 | `php artisan bildabooky:clear-domain` | eingetragene Domain entfernen |
 
 Jeweils mit `docker exec bildabooky` davor (bzw. `docker exec -it` für die

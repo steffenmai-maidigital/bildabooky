@@ -9,14 +9,14 @@
         <div class="hint">{{ __('Benutzername') }}: <code>{{ $user->username }}</code></div>
     </div>
 
-    @if(\App\Models\Setting::get('fox_enabled', '1') === '1')
+    @if(\App\Support\Companion::enabled())
     <div class="panel">
-        <h2 style="margin-top:0">🦊 {{ __('Fuchs-Helfer') }}</h2>
-        <form method="post" action="{{ route('account.fox') }}" class="row" style="align-items:center">
+        <h2 style="margin-top:0">🐈 Cara</h2>
+        <form method="post" action="{{ route('account.companion') }}" class="row" style="align-items:center">
             @csrf @method('put')
-            <p class="auto" style="margin:0;flex:1 1 260px">{{ $user->showsFox() ? __('Der Fuchs zeigt dir Tipps und muntert dich auf.') : __('Der Fuchs macht gerade Pause.') }}</p>
-            <input type="hidden" name="fox" value="{{ $user->showsFox() ? 0 : 1 }}">
-            <button class="auto {{ $user->showsFox() ? '' : 'primary' }}">{{ $user->showsFox() ? __('Fuchs ausblenden') : __('Fuchs anzeigen') }}</button>
+            <p class="auto" style="margin:0;flex:1 1 260px">{{ $user->showsCompanion() ? __('Cara schläft unten rechts. Wenn du sie antippst, gibt sie dir einen Tipp.') : __('Cara ist für dich ausgeblendet.') }}</p>
+            <input type="hidden" name="companion" value="{{ $user->showsCompanion() ? 0 : 1 }}">
+            <button class="auto {{ $user->showsCompanion() ? '' : 'primary' }}">{{ $user->showsCompanion() ? __('Cara ausblenden') : __('Cara anzeigen') }}</button>
         </form>
     </div>
     @endif

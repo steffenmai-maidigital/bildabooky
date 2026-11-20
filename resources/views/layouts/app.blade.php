@@ -82,17 +82,19 @@
     @endif
     @yield('content')
 </main>
-@if($u && $u->showsFox())
-    @include('partials.fox')
-@elseif(! $u && request()->routeIs('login') && \App\Models\Setting::get('fox_enabled', '1') === '1')
-    {{-- Anmeldeseite: der Fuchs wirbt für freie Software / Sign-in page: the fox helper promotes free software --}}
-    @include('partials.fox', ['foxMode' => 'login'])
+@if($u && $u->showsCompanion())
+    @include('partials.companion')
+@elseif(! $u && request()->routeIs('login') && \App\Support\Companion::enabled())
+    {{-- Anmeldeseite: Cara erzählt nach Antippen von freier Software / Sign-in page: after a tap Cara tells about free software --}}
+    @include('partials.companion', ['companionMode' => 'login'])
 @endif
 <footer class="bottom">
     @if(\App\Support\Branding::footerText())<div>{{ \App\Support\Branding::footerText() }}</div>@endif
     <div>
         BilDaBooky {{ \App\Support\License::edition() }} {{ config('version.number') }}
-        · @if(config('bildabooky.source_url'))<a href="{{ config('bildabooky.source_url') }}" rel="noopener">{{ __('freie Software (AGPL-3.0)') }}</a>@else{{ __('freie Software (AGPL-3.0)') }}@endif
+        {{-- Standard 03: „freie Software“ verlinkt auf SOURCE_URL, sonst auf GITHUB_URL / links to SOURCE_URL, otherwise GITHUB_URL --}}
+        @php($sourceUrl = config('bildabooky.source_url') ?: config('bildabooky.github'))
+        · @if($sourceUrl)<a href="{{ $sourceUrl }}" rel="noopener">{{ __('freie Software (AGPL-3.0)') }}</a>@else{{ __('freie Software (AGPL-3.0)') }}@endif
         · {{ __('alle Daten bleiben auf dem Schulserver') }}
         @if($u) · <a href="{{ route('help') }}">❓ {{ __('Hilfe') }}</a>@endif
         @foreach(\App\Support\LegalPages::links() as $r)

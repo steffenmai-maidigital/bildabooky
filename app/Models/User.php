@@ -38,7 +38,7 @@ class User extends Authenticatable
     ];
 
     protected $fillable = ['first_name', 'last_name', 'username', 'password', 'role', 'school_class_id',
-        'must_change_password', 'last_login_at', 'locale', 'fox', 'auth_source', 'mfa_policy'];
+        'must_change_password', 'last_login_at', 'locale', 'companion', 'auth_source', 'mfa_policy'];
     protected $hidden = ['password', 'remember_token', 'card_password', 'two_factor_secret', 'two_factor_recovery_codes'];
     protected $casts = [
         'password'                  => 'hashed',
@@ -47,8 +47,13 @@ class User extends Authenticatable
         'two_factor_secret'         => 'encrypted',
         'two_factor_recovery_codes' => 'encrypted:array',
         'two_factor_confirmed_at'   => 'datetime',
-        'fox'                       => 'boolean',
+        'companion'                 => 'boolean',
+        'active'                    => 'boolean',
     ];
+
+    // Neue Konten sind aktiv (wie der Spaltenstandard; gilt auch vor dem ersten Speichern)
+    // New accounts are active (like the column default; also applies before the first save)
+    protected $attributes = ['active' => true];
 
     // ---- Beziehungen / Relations ----------------------------------------
 
@@ -100,13 +105,13 @@ class User extends Authenticatable
     }
 
     /**
-     * Fuchs-Helfer anzeigen? Zentral abschaltbar (Admin), sonst je Person
+     * Cara anzeigen? Zentral abschaltbar (Admin), sonst je Person (null = an)
      *
-     * Show the fox helper? Can be switched off centrally (admin), otherwise per person
+     * Show Cara? Can be switched off centrally (admin), otherwise per person (null = on)
      */
-    public function showsFox(): bool
+    public function showsCompanion(): bool
     {
-        return \App\Models\Setting::get('fox_enabled', '1') === '1' && $this->fox !== false;
+        return \App\Support\Companion::enabled() && $this->companion !== false;
     }
 
     public function isAdmin(): bool
@@ -213,6 +218,18 @@ class User extends Authenticatable
         return in_array($schoolClass->id, $this->managedClassIds());
     }
 
+    /**
+     * Darf diese Person das Konto des anderen sperren bzw. entsperren? Nur Admins,
+     * nur Konten von Lehrkräften und Admins, nie das eigene.
+     *
+     * May this person lock or unlock the other one's account? Admins only, only
+     * accounts of teachers and admins, never one's own.
+     */
+    public function canLock(User $other): bool
+    {
+        return $this->isAdmin() && $other->canLead() && ! $other->is($this);
+    }
+
     /** Darf diese Person den anderen Benutzer bearbeiten? / May this person edit the other user? */
     public function manages(User $other): bool
     {
@@ -248,17 +265,27 @@ class User extends Authenticatable
     }
 
     /**
-     * Wirksame Stufe: aus der Sitzung (inkl. Verzeichnisgruppen), sonst frisch berechnet
+     * Wirksame Stufe: je Anfrage frisch berechnet; für die angemeldete Person
+     * gilt die strengere aus Sitzung (enthält die Verzeichnisgruppen der
+     * Anmeldung) und frischer Berechnung. So wirkt eine neue Pflicht – etwa
+     * nach der Beförderung zum Admin – sofort und nicht erst nach der
+     * nächsten Anmeldung.
      *
-     * Effective level: from the session (incl. directory groups), otherwise freshly calculated
+     * Effective level: freshly calculated per request; for the signed-in
+     * person the stricter one of session (holds the directory groups of the
+     * sign-in) and fresh calculation applies. That way a new duty – e.g.
+     * after a promotion to admin – takes effect at once and not only after
+     * the next sign-in.
      */
     public function mfaPolicy(): string
     {
+        $fresh = \App\Support\Mfa::policy($this);
         $s = session('mfa_policy');
         if ($s && auth()->id() === $this->id && isset(\App\Support\Mfa::LEVELS[$s])) {
-            return $s;
+            return \App\Support\Mfa::stricter($s, $fresh);
         }
-        return \App\Support\Mfa::policy($this);
+
+        return $fresh;
     }
 
     // ---- Anmeldekarte (optional) / Login card (optional) ------------------

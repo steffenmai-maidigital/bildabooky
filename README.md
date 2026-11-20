@@ -40,10 +40,10 @@ eurem eigenen Server (z. B. einer Synology im Schulnetz):
 | Formate | Hochformat, Quadrat, Querformat |
 | Lesen | Blättern per Knopf, Wischen oder Pfeiltasten, Vollbild, Töne antippen |
 | Teilen | zwei Knöpfe am eigenen Buch: **mit der Lehrkraft** (erscheint bei ihr unter „Bücher der Kinder“ in der Gruppe „Geteilt“) oder **mit der Klasse** (alle Kinder können es lesen) |
-| Fuchs-Helfer | Rua, der Fuchs (ein Wikinger-Fuchs aus einem norwegischen Fjorddorf, den die Iren „den Roten“ nannten), begrüßt animiert unten rechts mit Namen, lobt nach dem Speichern und gibt Tipps passend zu Rolle und Seite; im Editor reagiert er auf das Geschehen, beim Lesen begleitet er das Blättern; von sich aus spricht er höchstens alle 3 Minuten; „Schlafen legen“ lässt ihn schlafend liegen, bis man ihn antippt; auf der Anmeldeseite wirbt er für freie Software (mit Link auf `SOURCE_URL`); respektiert „weniger Bewegung“. Admins schalten ihn zentral aus, jede Person im eigenen Konto |
+| Begleiterin Cara | eine schwarze Katze unten rechts, die schläft, bis man sie antippt; dann gibt sie Tipps passend zu Rolle und Seite. Von sich aus spricht sie nur als Antwort auf eine Handlung: nach dem Speichern („Gespeichert.“), bei einer Fehlermeldung und im Buch nach Aktionen (z. B. Foto eingefügt, abgegeben, letzte Seite). Nichts erscheint nach Zeit. Sie hat keine Meinung, nur Fakten; auf der Anmeldeseite erzählt sie nach Antippen von freier Software (mit Link auf `SOURCE_URL`). Verschiebbar per Ziehen und Pfeiltasten, „Schlafen legen“ hält sie still, respektiert „weniger Bewegung“. Admins schalten sie zentral aus, jede Person im eigenen Konto ([docs/CARA.md](docs/CARA.md)) |
 | Sommerferienmodus | Admins setzen ein Datum; an dem Tag um 3 Uhr werden alle Schülerkonten mit Büchern, Fotos, Tonaufnahmen und Protokolleinträgen endgültig gelöscht — mit Sicherung vorher und Hinweis an die Kinder drei Wochen vorher |
 | Klassenbuch | die ganze Klasse schreibt gemeinsam in einem Buch; Änderungen der anderen erscheinen nach wenigen Sekunden, gleichzeitige Änderungen an derselben Seite werden zusammengeführt, man sieht, wer gerade wo arbeitet |
-| Klassen und Fächer | Admins legen Klassen und Fächer an und stellen je Klasse ein, welche Fächer es gibt und wer sie unterrichtet; eine Klasse kann mehrere Lehrkräfte haben, eine Lehrkraft mehrere Klassen mit unterschiedlichen Fächern. Kinder sehen ihre Bücher nach Fächern geordnet, legen sie im Fach an und verschieben sie; alle Lehrkräfte einer Klasse sehen alle Bücher der Klasse, mit Fach-Filter (eigene Fächer zuerst) |
+| Klassen und Fächer | Admins legen Klassen und Fächer an und stellen je Klasse ein, welche Fächer es gibt und wer sie unterrichtet; eine Klasse kann mehrere Lehrkräfte haben, eine Lehrkraft mehrere Klassen mit unterschiedlichen Fächern. Kinder sehen ihre Bücher nach Fächern geordnet, legen sie im Fach an und verschieben sie; alle Lehrkräfte einer Klasse sehen alle Bücher der Kinder, Klassenbücher und Vorlagen der Klasse, mit Fach-Filter (eigene Fächer zuerst); eigene Bücher einer Lehrkraft sehen nur sie und die Admins |
 | Vorlagen | die Lehrkraft gibt ein Buch vor, jedes Kind legt seine eigene Version an; Übersicht „Versionen der Kinder“ mit „angefangen“ und „abgegeben“ |
 | Änderungsprotokoll | je Buch: wer wann was geändert hat (Text, Bild, Seiten, Titel, Teilen, Abgabe) — nur für Lehrkräfte und Admins |
 | Ausgabe | Drucken / PDF (A4 bzw. quadratisch), Datei zum Mitnehmen |
@@ -51,19 +51,19 @@ eurem eigenen Server (z. B. einer Synology im Schulnetz):
 | Anmeldekarten | optional: Passwort zusätzlich verschlüsselt hinterlegen, damit Karten jederzeit neu gedruckt werden können |
 | Schulverzeichnis | optional unter **Einstellungen → 9**: Lehrkräfte und Admins melden sich mit ihrem Schulkonto an (LDAP-Bind, kein Passwort in BilDaBooky); Rolle aus Gruppen (Lehrkräfte, Admins), Konto entsteht beim ersten Anmelden, „Verbindung testen“; eigene Konten funktionieren weiterhin |
 | Anmelde-Sitzungen | Kinder melden sich nur an, wenn eine Lehrkraft ihrer Klasse die Anmeldung freigeschaltet hat (60/120/180 Minuten oder bis zu 7 Tage, dann bis 17 Uhr), mit Passwort **und** 6-stelligem Sitzungscode — das ersetzt bei Kindern die Zwei-Faktor-Anmeldung. Alle Lehrkräfte der Klasse sehen Grund, Code und wer angemeldet ist und können die Sitzung mit Grund vorzeitig beenden (Kinder werden abgemeldet). Verlauf 60 Tage. Vom Admin abschaltbar |
-| Sicherheit | Zwei-Faktor (TOTP) mit Wiederherstellungscodes für Lehrkräfte und Admins — je Gruppe Pflicht, wählbar oder aus, Gruppen des Schulverzeichnisses mit Pflicht, Ausnahme je Person; Bremse gegen Passwort- und Code-Raten |
+| Sicherheit | Zwei-Faktor (TOTP) mit Wiederherstellungscodes für Lehrkräfte und Admins — je Gruppe Pflicht, wählbar oder aus, Gruppen des Schulverzeichnisses mit Pflicht, Ausnahme je Person; Bremse gegen Passwort- und Code-Raten; Konten von Lehrkräften und Admins sperren („Konto aktiv“, die Sitzung endet sofort); ein Passwortwechsel beendet die anderen Sitzungen |
 | Sprachen | Deutsch, Englisch, Französisch, Spanisch. Die Sprache wird am Browser erkannt und lässt sich umschalten. Was fehlt, erscheint auf Deutsch. |
 | Gestaltung | Admins stellen Schulname, Logo, Farben (Akzent, Kopfzeile, Hintergrund), Fußzeilentext und Domain direkt in der Oberfläche ein |
 | Impressum und Datenschutz | einzeln einschaltbar, als eigener Text oder Link auf die Schulhomepage; ohne Anmeldung erreichbar, verlinkt auf der Anmeldeseite und in der Fußzeile; mit Vorlage für die Datenschutzerklärung |
 | Hilfe | Kurzanleitung, System, Lizenz, letzte Fehler der vergangenen 30 Tage (Admins, mit „Protokoll leeren“) und Changelog unter „Hilfe“ in der Fußzeile |
-| Betrieb | Docker, SQLite, nächtliche Sicherung (Datenbank + Medien als ZIP) |
+| Betrieb | Docker, SQLite, nächtliche Sicherung (Datenbank + Medien als ZIP), entfernte Fotos und Töne werden nach 30 Tagen gelöscht |
 
 ## Rollen
 
 | Rolle | Darf |
 |---|---|
-| **Admin** | ein Haken bei einer Lehrkraft („Zusätzlich Admin“) — Verwaltung: Klassen und Fächer anlegen, Lehrkräfte und Admins verwalten, Gestaltung, Domain und Lizenz, Sicherung herunterladen. **Keine** Bücher anderer — außer in Klassen, in denen der Admin selbst unterrichtet (dann wie eine Lehrkraft) |
-| **Leiter** (Lehrkraft) | leitet eine oder mehrere Klassen: legt dort Schüler an, setzt Passwörter zurück, druckt Anmeldekarten; legt Klassenbücher und Vorlagen an; sieht und bearbeitet **alle** Bücher ihrer Klasse; liest das Änderungsprotokoll |
+| **Admin** | ein Haken bei einer Lehrkraft („Zusätzlich Admin“) — Verwaltung: Klassen und Fächer anlegen, Lehrkräfte und Admins verwalten, Gestaltung, Domain und Lizenz, Konten sperren, Sicherung herunterladen (mit Passwort). **Keine** Bücher der Kinder, Klassenbücher oder Vorlagen — außer in Klassen, in denen der Admin selbst unterrichtet (dann wie eine Lehrkraft); eigene Bücher von Lehrkräften sieht und verwaltet ein Admin immer |
+| **Leiter** (Lehrkraft) | leitet eine oder mehrere Klassen: legt dort Schüler an, setzt Passwörter zurück, druckt Anmeldekarten; legt Klassenbücher und Vorlagen an; sieht und bearbeitet **alle** Bücher der Kinder, Klassenbücher und Vorlagen ihrer Klasse; liest das Änderungsprotokoll; eigene Bücher sehen nur sie selbst und die Admins |
 | **Ersteller** (Schüler) | eigene Bücher gestalten, teilen und mitnehmen; in Klassenbüchern mitschreiben; aus Vorlagen eine eigene Version anlegen und abgeben; geteilte Bücher der Klasse lesen |
 
 ### Wer sieht welches Buch?
@@ -77,7 +77,9 @@ eurem eigenen Server (z. B. einer Synology im Schulnetz):
 | Vorlage | — | ansehen, eigene Version starten | bearbeiten, Versionen, Protokoll |
 | Version aus Vorlage | bearbeiten, abgeben | — | immer sichtbar, helfen, Protokoll, abgegebene Version mit Nachricht zurückgeben |
 
-Admins sehen keine fremden Bücher. Unterrichtet ein Admin selbst, ordnet man ihn wie eine Lehrkraft Klassen und Fächern zu; dann sieht er genau die Bücher dieser Klassen. Hinweis: Die Sicherung enthält technisch alle Daten — wer sie herunterladen darf (Admins), hat damit Zugriff auf alles.
+Eigene Bücher von Lehrkräften (kein Klassenbuch, keine Vorlage) sehen, ändern, drucken, kopieren und löschen nur die Lehrkraft selbst und die Admins — auch Fotos, Töne und Protokoll. Andere Lehrkräfte der Klasse sehen es nicht. Teilt die Lehrkraft es „mit der Lehrkraft“, lesen es die anderen Lehrkräfte der Klasse, „mit der Klasse“ auch die Kinder; ändern dürfen sie es nicht.
+
+Admins sehen keine Bücher der Kinder, Klassenbücher oder Vorlagen. Unterrichtet ein Admin selbst, ordnet man ihn wie eine Lehrkraft Klassen und Fächern zu; dann sieht er genau die Bücher dieser Klassen. Eigene Bücher von Lehrkräften sieht ein Admin immer. Hinweis: Die Sicherung enthält technisch alle Daten — wer sie herunterladen darf (Admins, mit Passwort), hat damit Zugriff auf alles.
 
 ## Anleitungen
 
@@ -242,13 +244,16 @@ Der `APP_KEY` wird beim ersten Start erzeugt und im Datenvolume abgelegt
 (`/data/.app_key`). Damit bleiben Anmeldungen, Zwei-Faktor-Geheimnisse und
 Anmeldekarten auch nach einem Neuerstellen des Containers gültig.
 **Diese Datei gehört zur Sicherung.** Ohne sie lassen sich Zwei-Faktor und
-hinterlegte Karten nicht mehr entschlüsseln.
+hinterlegte Karten nicht mehr entschlüsseln. Die nächtlichen Sicherungen im
+Ordner `backups` enthalten sie, die Sicherung zum Herunterladen im Browser
+nicht: Den Schlüssel getrennt aufbewahren (z. B. im Passwortmanager).
 
 ### Daten und Sicherung
 
 - `app-data` (Volume): Datenbank `bildabooky.sqlite`, Medien unter `medien/`, `.app_key`
-- `./backups`: jede Nacht um 2:30 Uhr ein ZIP mit Datenbank und Medien
-- Admins können unter **Klassen → Sicherung** jederzeit eine Sicherung herunterladen.
+- `./backups`: jede Nacht um 2:30 Uhr ein ZIP mit Datenbank, Medien und `.app_key`
+- Admins können unter **Klassen → Sicherung** jederzeit eine Sicherung herunterladen. Sie bestätigen mit ihrem Passwort (Schulkonten: Code aus der Authenticator-App); die Datei enthält den App-Schlüssel nicht.
+- Fotos, Zeichnungen und Töne, die auf keiner Seite mehr stehen, löscht BilDaBooky nach 30 Tagen (nachts, `bildabooky:prune-media`).
 
 Wiederherstellen und Umziehen: siehe [installation/betrieb.md](installation/betrieb.md).
 

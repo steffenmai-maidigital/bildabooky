@@ -126,8 +126,8 @@ In detail – including Nginx Proxy Manager and nginx: [reverse-proxy.md](revers
 
 - Updates, backups and restoring: [operations.md](operations.md)
 - The second container `bildabooky-scheduler` runs the nightly backup
-  (2:30 a.m.) and the summer holiday mode (3:00 a.m.). It has to keep
-  running.
+  (2:30 a.m.), deletes removed photos and sounds after 30 days (3:10 a.m.)
+  and runs the summer holiday mode (3:00 a.m.). It has to keep running.
 
 ## Try it without Compose
 

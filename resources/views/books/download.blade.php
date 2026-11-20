@@ -16,8 +16,11 @@
 @include('partials.reader', ['standalone' => true, 'canEdit' => false])
 <script>
     window.BDB_TEXTS = @json((object) \App\Support\Lang::forJs());
-    window.BDB = { media: @json($media, JSON_UNESCAPED_SLASHES), emoji: @json($emoji, JSON_UNESCAPED_SLASHES) };
-    window.BOOK = @json(['format' => $book->format, 'pages' => $book->pages->map->toEditorArray()->values(), 'standalone' => true]);
+    window.BDB = { media: @json($media, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP), emoji: @json($emoji, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) };
+    {{-- Werte erst in eine Variable: @json teilt seinen Ausdruck an Kommas und verlöre sonst die Schutz-Flags (JSON_HEX_TAG …)
+         values into a variable first: @json splits its expression at commas and would otherwise lose the safety flags (JSON_HEX_TAG …) --}}
+    @php($bookJs = ['format' => $book->format, 'pages' => $book->pages->map->toEditorArray()->values(), 'standalone' => true])
+    window.BOOK = @json($bookJs);
 </script>
 <script>{!! str_replace('</script', '<\/script', $js) !!}</script>
 </body>

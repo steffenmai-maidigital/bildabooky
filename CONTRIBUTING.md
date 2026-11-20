@@ -16,6 +16,9 @@ Schön, dass du helfen möchtest! *(English below.)*
    (`Page::sanitizeElement`).
 5. **Jeder Text übersetzbar.** In PHP und Blade `__('Deutscher Text')`, im
    JavaScript `t('Deutscher Text')`. Danach die Übersetzungen in `lang/*.json` ergänzen.
+6. **Cara, die Begleiterin**, schläft, bis man sie antippt, und hat keine
+   Meinung, nur Fakten. Neue Sätze für sie folgen [docs/CARA.md](docs/CARA.md);
+   nichts darf nach Zeit von selbst erscheinen.
 
 ## Ablauf
 
@@ -68,8 +71,8 @@ Hälfte der Kommentare.
   Klasse = class (`SchoolClass`), Fach = subject, Buch = book, Seite = page,
   Klassenbuch = class book, Vorlage = template, Freigabe = sharing, abgeben =
   submit, zurückgeben = return, Klassensitzung = class session, Sommerferien
-  = summer holiday, Sicherung = backup, Verzeichnis = directory, Fuchs-Helfer
-  = fox.
+  = summer holiday, Sicherung = backup, Verzeichnis = directory, Begleiterin
+  (Cara) = companion.
 - Die Datenordner `/data/medien` und `/data/marke` (und dieselben Ordner in
   den Sicherungen) behalten ihre Namen, damit bestehende Daten und alte
   Sicherungen gültig bleiben.
@@ -92,8 +95,8 @@ under `docs/` and the German half of the comments.
   Klasse = class (`SchoolClass`), Fach = subject, Buch = book, Seite = page,
   Klassenbuch = class book, Vorlage = template, Freigabe = sharing, abgeben =
   submit, zurückgeben = return, Klassensitzung = class session, Sommerferien
-  = summer holiday, Sicherung = backup, Verzeichnis = directory, Fuchs-Helfer
-  = fox.
+  = summer holiday, Sicherung = backup, Verzeichnis = directory, Begleiterin
+  (Cara) = companion.
 - The data folders `/data/medien` and `/data/marke` (and the same folders in
   backups) keep their names so that existing data and old backups stay
   valid.
@@ -117,6 +120,9 @@ describe it in an issue first and the maintainers will get back to you.
 - Never render book content as HTML.
 - All UI strings must be translatable: `__('German text')` in PHP/Blade and
   `t('German text')` in JS. German strings are the keys. Update `lang/*.json`.
+- Cara, the companion, sleeps until tapped and has no opinions, only facts.
+  New lines for her follow [docs/CARA.md](docs/CARA.md); nothing may appear on
+  its own after a time.
 
 The [Code of Conduct](CODE_OF_CONDUCT.md) applies.
 

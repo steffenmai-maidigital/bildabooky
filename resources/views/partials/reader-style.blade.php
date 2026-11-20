@@ -21,5 +21,11 @@
         .enter-right { animation: enter-r .28s ease-out; } .enter-left { animation: enter-l .28s ease-out; }
         @keyframes enter-r { from { transform: translateX(40px); opacity: 0; } }
         @keyframes enter-l { from { transform: translateX(-40px); opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) { .enter-right, .enter-left { animation: none; } }
         #reader-counter { min-width: 5rem; text-align: center; font-variant-numeric: tabular-nums; }
+        /* Kopfzeile: Knöpfe brechen nie um, der Titel kürzt sich; auf dem Telefon nur die Zeichen
+           Header: buttons never wrap, the title shortens; on the phone only the symbols */
+        .reader-header > a, .reader-header > span > * { flex: none; white-space: nowrap; }
+        .reader-header > b { flex: 1 1 auto; min-width: 0; text-align: center; }
+        @media (max-width: 520px) { .reader .reader-word { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); } }
     </style>

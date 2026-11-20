@@ -7,6 +7,69 @@ Version am 11.10.2026). Neue Einträge kommen unter „Unveröffentlicht“;
 
 ## [Unveröffentlicht]
 
+## [26112001] — 2026-11-20
+
+### Neu
+
+- **Cara, die Begleiterin:** Eine schwarze Katze unten rechts ersetzt den Fuchs-Helfer Rua. Sie schläft, bis man sie antippt. Das erste Antippen sagt das Passende zur Seite oder begrüßt, jedes weitere gibt den nächsten Tipp passend zu Rolle und Ansicht. Von sich aus spricht sie nur als Antwort auf eine Handlung: nach dem Speichern („Gespeichert.“, nach Ernstem „Erledigt.“), bei einer Fehlermeldung und im Buch nach Aktionen (Foto, neue Seite, Abgabe, letzte Seite …). Sie hat keine Meinung, nur Fakten; alle Texte sind neu, auf Deutsch, Englisch, Französisch und Spanisch. Figur und Verhalten: `docs/CARA.md`.
+- Cara mit der Tastatur: Enter oder Leertaste weckt sie, die Pfeiltasten verschieben sie, Escape schließt die Blase. Im Dunkelmodus und in der Leseansicht hat sie eine feine helle Lichtkante.
+- **Konto aktiv:** Admins sperren unter **Benutzer** → Person Konten von Lehrkräften und Admins mit dem Haken „Konto aktiv“, ohne sie zu löschen (das eigene Konto nicht). Ein gesperrtes Konto kommt nicht hinein, weder mit eigenem Passwort noch über das Schulverzeichnis, und eine laufende Sitzung endet bei der nächsten Aktion. Die Benutzerliste zeigt „Konto gesperrt“. Neue Spalte `users.active`; beim Upgrade sind alle Konten aktiv.
+- **Entfernte Fotos, Zeichnungen und Töne werden gelöscht:** Steht ein Medium auf keiner Seite irgendeines Buchs mehr (auch keiner Version, Vorlage oder Kopie), löscht die nächtliche Aufgabe `bildabooky:prune-media` Datei und Datensatz nach 30 Tagen. Die Frist beginnt mit dem ersten Lauf ohne Bezug; wird das Medium vorher wieder eingesetzt, entfällt sie. Die Anzahl steht im Protokoll. Neue Spalte `media.unused_since`.
+
+### Geändert
+
+- **Fuchs → Begleiterin:** Spalte `users.fox` heißt jetzt `users.companion`, die Einstellung `fox_enabled` heißt `companion_enabled`, die Adresse `PUT /account/fox` heißt `PUT /account/companion`. Die neue Migration `rename_fox_to_companion` stellt beim Start um, jede Wahl bleibt: Wer den Fuchs ausgeschaltet hatte, hat Cara aus; war er zentral aus, bleibt Cara zentral aus. Der Browser übernimmt „Schlafen legen“ und die Lage einmal. Liste alt → neu in `docs/RENAMING.md`.
+- Im Editor und in der Leseansicht sagt Cara die Erfolgsmeldung selbst (z. B. „Kopie angelegt.“), weil diese Ansichten oben keine Meldung zeigen.
+- „freie Software (AGPL-3.0)“ im Footer und Caras Link zum Quellcode führen ohne `SOURCE_URL` zum Projekt auf GitHub (Standard 03).
+- Bessere Lesbarkeit: dunklere Farben für Hinweistexte, Links, blaue Knöpfe und Warnknöpfe (Kontrast nach WCAG AA).
+- Auf Telefonen und Tablets sind Knöpfe, Menüs, Filter und Haken mindestens 44 px hoch.
+- Leseansicht am Telefon: Die Kopfzeile zeigt nur die Zeichen (‹, ⛶, ✏️, ✅), der Titel bleibt lesbar. Mit „weniger Bewegung“ wechseln die Seiten ohne Gleiten.
+- Hilfe → Kurzanleitung: neue Zeilen zum Konto (Kinder) und zu Sprache und Hell/Dunkel.
+- Bibliothek: Der Hinweis zur Klasse ist im Dunkelmodus dunkel und am Telefon ein Kasten statt einer umbrochenen Pille.
+- **Notzugang angeglichen (Standard 09):** `bildabooky:admin-password` setzt nur noch lokale Admins zurück (bei Schulkonten nützte das nichts) und legt einen lokalen Admin an, wenn es keinen gibt, z. B. wenn alle Admins aus dem Schulverzeichnis kommen. Ein gesperrtes Konto ist danach wieder aktiv. `--disable-2fa` bleibt.
+- **Gruppen im Schulverzeichnis eindeutig:** Beim Speichern der Einstellungen werden Gruppe der Lehrkräfte, Gruppe der Admins und die Gruppen mit Zwei-Faktor-Pflicht im Verzeichnis nachgeschlagen. Ein Name, den es genau einmal gibt, wird als vollständiger DN gespeichert. Gibt es ihn mehrfach (gleicher Name in verschiedenen OUs), meldet das Feld den Fehler und der alte Wert bleibt. Ist das Verzeichnis aus oder nicht erreichbar, bleibt die Eingabe, wie sie ist.
+- Hilfe → Kurzanleitung: Zeilen zu eigenen Büchern, zum Sperren von Konten und zur Sicherung.
+
+### Entfernt
+
+- Cara spricht nicht mehr nach Zeit: keine Begrüßung beim Laden, kein Hinweis nach 3 Minuten Ruhe, kein Erklär-Hinweis nach 40 Sekunden (er ist jetzt ein gewöhnlicher Tipp), kein Wartesatz beim Absenden eines Formulars (`data-no-fox` hat keine Wirkung mehr), keine Sprüche.
+
+### Behoben
+
+- Auf Tablet-Breite lag die schlafende Cara auf der Fußzeile, wenn die Seite nicht scrollt (z. B. Anmeldung). Die Fußzeile lässt die Ecke jetzt frei.
+- Editor: Die Rückfrage beim Aufheben des Teilens zeigte „:titel“ statt des Buchtitels.
+- Editor: Knöpfe ohne Text (↶, ⚙️ …) verloren nach dem ersten Tooltip ihren Namen für Bildschirmleser.
+- Sommerferien-Vorschau: richtige Einzahl und Mehrzahl („1 Klasse“).
+- Ein Seitenelement mit ungültiger Art (z. B. `type: true`) wird verworfen statt gespeichert.
+
+### Sicherheit
+
+- **Sicherungsdateien nicht für alle lesbar:** Die ZIP-Dateien in `backups` entstehen mit den Rechten `0640` (wie LinkHub). Zum Prüfen oder Kopieren auf dem Host `sudo` verwenden.
+- **Anmeldung der Kinder:** Ist die Klasse gerade nicht freigegeben, kommt sofort „keine Sitzung freigegeben“, ohne das Passwort zu prüfen. Bisher verriet diese Meldung, dass das Passwort stimmte, und Mitschüler konnten sich außerhalb des Unterrichts gegenseitig aussperren.
+- **Kürzere Sperre für Kinder, Knopf „Sperre aufheben“:** Nach 10 falschen Passwörtern ist ein Kind 5 Minuten gesperrt (Lehrkräfte und Admins weiter 30 Minuten). Wer die Person verwaltet, hebt die Sperre unter **Benutzer** → Person auf, ohne ein neues Passwort zu vergeben.
+- **„Lehrkräfte dürfen sich selbst in Klassen eintragen“ ab Werk aus:** Sonst kann sich jede Lehrkraft in jede Klasse eintragen und dort Kinder samt Büchern löschen. Bestehende Installationen behalten ihre Einstellung (eine Migration schreibt „an“ fest, wenn der Schalter nie gespeichert wurde).
+- **Passwort des Servicekontos geht nicht mehr an fremde Server:** Ändert man unter Einstellungen → Anmeldung Server, Port, Verschlüsselung oder Servicekonto, ohne das Passwort neu einzugeben, gilt das alte nicht mehr. Bisher schickte „Verbindung testen“ es an den neuen, womöglich fremden Server (auch das Passwort aus `docker-compose.yml`). Nach einem Serverwechsel das Passwort also neu eintragen.
+- **Keine Passwörter mehr im Fehlerprotokoll:** War das Schulverzeichnis nicht erreichbar, stand der Anfang des eingegebenen Passworts im Stacktrace von `laravel.log`. Passwort-Parameter sind jetzt als sensibel markiert, und `docker/php.ini` setzt `zend.exception_ignore_args = On` und `display_errors = Off`.
+- **Schulverzeichnis mit Zeitlimit je Abfrage:** Ein Server, der die Verbindung annimmt und nicht antwortet, blockiert die Anmeldung nicht mehr unbegrenzt.
+- **Bestätigung im Konto gebremst:** Passwort bzw. App-Code zum Ausschalten der Zwei-Faktor-Anmeldung und für neue Wiederherstellungscodes: nach 5 Fehlversuchen 5 Minuten Pause; ein App-Code gilt nur einmal.
+- **Schulverzeichnis: Die Gruppe der Lehrkräfte ist Pflicht.** Bisher wurde bei leerer Gruppe jedes Verzeichniskonto Lehrkraft, in Schulverzeichnissen also auch Schülerkonten. Jetzt kommen nur Mitglieder der Gruppe der Lehrkräfte oder der Admins hinein, und ohne Gruppe lässt sich das Verzeichnis nicht einschalten. **Wer die Gruppe bisher leer hatte:** unter Einstellungen → 9 die Gruppe der Lehrkräfte eintragen. Bis dahin melden sich mit dem Schulkonto nur Mitglieder der Admin-Gruppe an; die Einstellungsseite weist darauf hin. Eigene Konten sind nicht betroffen.
+- Eine geänderte Zwei-Faktor-Stufe wirkt sofort, nicht erst nach der nächsten Anmeldung (z. B. Beförderung zum Admin, wenn für Admins Pflicht gilt). Wer als Admin die Pflicht für Admins einschaltet, richtet danach gleich seinen zweiten Faktor ein.
+- Die Hilfe ist erst erreichbar, wenn das Startpasswort geändert und ein vorgeschriebener zweiter Faktor eingerichtet ist (Standard 09); vorher gehen nur Konto und Abmelden.
+- Die eigene Zwei-Faktor-Anmeldung lässt sich nicht mehr unter „Benutzer“ zurücksetzen (das ging ohne Passwort und an einer Pflicht vorbei); dafür ist die Seite **Konto** da.
+- Anmeldekarten: Das selbst gewählte Passwort einer Lehrkraft oder eines Admins wird nicht mehr lesbar hinterlegt. Die Karte mit dem Startpasswort entfällt mit dem ersten eigenen Passwort; bei Kindern bleibt die Karte wie bisher aktuell.
+- Datei zum Mitnehmen und Kopien enthalten nur Fotos und Töne, die auf einer Seite stehen. Ein entferntes Foto wandert nicht mehr mit.
+- Leseansicht, Datei zum Mitnehmen und Bibliothek maskieren Buchinhalte und Fachnamen im Skript vollständig. Ein Text wie `<!--<script>` kann die Seite nicht mehr stören.
+- „Protokoll leeren“ prüft das Admin-Recht zusätzlich im Controller.
+- **Sicherung im Browser ohne App-Schlüssel:** Die Sicherung zum Herunterladen (**Klassen → Sicherung**) enthält `.app_key` nicht mehr. Wer die Datei bekommt, kann damit die Zwei-Faktor-Geheimnisse und die Passwörter der Anmeldekarten nicht entschlüsseln. Der Schlüssel liegt auf dem Server in `/data/.app_key` und gehört getrennt aufbewahrt; die Sicherungen auf dem Server (nächtlich, vor dem Löschen einer Klasse, vor dem Sommerferienmodus) enthalten ihn weiter. Ein Hinweis an der Download-Stelle sagt das.
+- **Sicherung nur per Knopf mit Passwort:** Die Sicherung zum Herunterladen entsteht nur noch per Formular (POST mit CSRF-Schutz) und mit dem eigenen Passwort bzw. bei Schulkonten einem Code aus der Authenticator-App, gebremst wie im Konto (5 Fehlversuche → 5 Minuten, ein App-Code gilt nur einmal, gemeinsame Bremse). Schulkonten ohne Zwei-Faktor-Anmeldung bekommen einen Hinweis statt des Formulars. `GET /backup` liefert keine Sicherung mehr, sondern führt zum Formular; ein Link oder eingebettetes Bild kann so keine Sicherung mehr auslösen.
+- **Passwortwechsel beendet die anderen Sitzungen:** Nach dem eigenen Passwortwechsel sind alle anderen Sitzungen der Person beendet, die eigene bleibt. Setzt eine Lehrkraft oder ein Admin das Passwort zurück (auch über „Neues Passwort“ beim Bearbeiten oder den Notzugang), enden alle Sitzungen dieser Person. Die Anmeldeseite sagt dann „Dein Passwort wurde geändert“. Technisch: Laravels `AuthenticateSession` vergleicht je Anfrage den Passwort-Hash.
+- **Eigene Bücher von Lehrkräften nur für Eigentümerin und Admins:** Ein eigenes Buch einer Lehrkraft oder eines Admins (kein Klassenbuch, keine Vorlage, kein Buch eines Kindes) sehen, ändern, drucken, mitnehmen, kopieren und löschen nur sie selbst und die Admins; das gilt auch für Fotos, Töne (`/media/…`), Vorschau und Protokoll. Bisher reichte es, in derselben Klasse zu unterrichten. Teilt die Eigentümerin das Buch „mit der Lehrkraft“, lesen es die anderen Lehrkräfte der Klasse, „mit der Klasse“ auch die Kinder; ändern dürfen sie es nicht. Klassenbücher, Vorlagen und Bücher der Kinder bleiben für alle Lehrkräfte der Klasse offen.
+
+### Dokumentation
+
+- `SECURITY.md` beschreibt die bekannte Folge des Standardwerts von `TRUSTED_PROXIES`: Geräte im internen Netz können ihre Adresse vortäuschen und die Anmeldebremse je Adresse umgehen; wer das vermeiden will, trägt nur die IP des Reverse Proxys ein.
+- `docs/CARA.md` ersetzt `docs/RUA.md`. README, Benutzer- und Administratorhandbuch, Architektur, Sicherheit, Überblick, CONTRIBUTING (Glossar: Begleiterin = companion) und `docs/RENAMING.md` sind angepasst.
+
 ## [26101802] — 2026-10-18
 
 ### Dokumentation

@@ -136,7 +136,15 @@ class Book extends Model
     //  Vorlage:        die Klasse sieht sie; bearbeiten nur Lehrkräfte.
     //  Version:        gehört dem Kind.
     //  Admin:          wie eine Lehrkraft — nur die Klassen, die er selbst
-    //                  unterrichtet. Die Verwaltungsrolle öffnet keine Bücher.
+    //                  unterrichtet. Die Verwaltungsrolle öffnet keine Bücher,
+    //                  mit einer Ausnahme:
+    //  Eigenes Buch einer Lehrkraft (bzw. eines Admins; kein Klassenbuch, keine
+    //                  Vorlage, kein Buch eines Kindes): sehen, ändern, drucken,
+    //                  mitnehmen, kopieren, löschen und das Protokoll lesen nur
+    //                  die Eigentümerin und die Admins – nicht die übrigen
+    //                  Lehrkräfte der Klasse. Teilt die Eigentümerin es selbst
+    //                  („mit der Lehrkraft“ bzw. „mit der Klasse“), lesen es die
+    //                  Lehrkräfte bzw. die ganze Klasse, wie jedes geteilte Buch.
     //
     //  Teacher:        sees ALL books of their class and may help
     //                  (edit), manage and read the log.
@@ -147,7 +155,14 @@ class Book extends Model
     //  Template:       the class sees it; only teachers edit it.
     //  Version:        belongs to the child.
     //  Admin:          like a teacher — only the classes they teach
-    //                  themselves. The admin role opens no books.
+    //                  themselves. The admin role opens no books,
+    //                  with one exception:
+    //  Own book of a teacher (or an admin; no class book, no template, no
+    //                  child's book): only the owner and the admins see, edit,
+    //                  print, take home, copy, delete it and read its log – not
+    //                  the other teachers of the class. If the owner shares it
+    //                  herself (“with the teacher” or “with the class”), the
+    //                  teachers or the whole class read it, like any shared book.
 
     private function inClass(User $user): bool
     {
@@ -166,6 +181,11 @@ class Book extends Model
      */
     public function isTeacherOf(User $user): bool
     {
+        // Eigene Bücher von Lehrkräften: keine weitere Lehrkraft ist zuständig
+        // Teachers' own books: no other teacher is responsible
+        if ($this->isTeachersOwn()) {
+            return false;
+        }
         $classes = $user->teachingClassIds();
         if (! $classes) {
             return false;
@@ -176,21 +196,51 @@ class Book extends Model
             || ($this->owner && $this->owner->isPupil() && in_array((int) $this->owner->school_class_id, $classes, true));
     }
 
+    /**
+     * Eigenes Buch einer Lehrkraft bzw. eines Admins: kein Klassenbuch, keine
+     * Vorlage, kein Buch eines Kindes (damit auch keine Version eines Kindes)
+     *
+     * Own book of a teacher or an admin: no class book, no template, no child's
+     * book (so no child's version either)
+     */
+    public function isTeachersOwn(): bool
+    {
+        return $this->kind === self::KIND_OWN && $this->owner && ! $this->owner->isPupil();
+    }
+
+    /**
+     * Eigentümerin oder – bei eigenen Büchern von Lehrkräften – ein Admin
+     *
+     * Owner or – for teachers' own books – an admin
+     */
+    private function ownedOrAdministeredBy(User $user): bool
+    {
+        return $this->user_id == $user->id || ($this->isTeachersOwn() && $user->isAdmin());
+    }
+
     public function visibleTo(User $user): bool
     {
-        if ($this->user_id == $user->id || $this->isTeacherOf($user)) {
+        if ($this->ownedOrAdministeredBy($user) || $this->isTeacherOf($user)) {
             return true;
         }
         if ($this->isClassBook() || $this->isTemplate()) {
             return $this->inClass($user);
         }
-        return $this->sharing === self::SHARING_CLASS && ! $this->isVersion() && $this->inClass($user);
+        if ($this->isVersion()) {
+            return false;
+        }
+        // Geteilt: „mit der Klasse“ liest die Klasse; bei Büchern von Lehrkräften öffnet
+        // „mit der Lehrkraft“ das Buch den anderen Lehrkräften der Klasse zum Lesen
+        // Shared: “with the class” lets the class read; for teachers' books “with the
+        // teacher” opens the book to the other teachers of the class for reading
+        return ($this->sharing === self::SHARING_CLASS && $this->inClass($user))
+            || ($this->sharing === self::SHARING_TEACHER && $this->isTeachersOwn() && $user->canLead() && $this->inClass($user));
     }
 
     /** Seiten und Inhalte bearbeiten / Edit pages and content */
     public function editableBy(User $user): bool
     {
-        if ($this->user_id == $user->id || $this->isTeacherOf($user)) {
+        if ($this->ownedOrAdministeredBy($user) || $this->isTeacherOf($user)) {
             return true;
         }
         return $this->isClassBook() && $this->inClass($user);
@@ -203,17 +253,19 @@ class Book extends Model
      */
     public function manageableBy(User $user): bool
     {
-        return $this->user_id == $user->id || $this->isTeacherOf($user);
+        return $this->ownedOrAdministeredBy($user) || $this->isTeacherOf($user);
     }
 
     /**
-     * Änderungsprotokoll: nur Lehrkräfte bzw. unterrichtende Admins der Klasse
+     * Änderungsprotokoll: nur Lehrkräfte bzw. unterrichtende Admins der Klasse;
+     * bei eigenen Büchern von Lehrkräften die Eigentümerin und die Admins
      *
-     * Change log: only teachers or teaching admins of the class
+     * Change log: only teachers or teaching admins of the class; for teachers'
+     * own books the owner and the admins
      */
     public function logVisibleTo(User $user): bool
     {
-        return ($user->isTeacher() || $user->isAdmin()) && ($this->user_id == $user->id || $this->isTeacherOf($user));
+        return ($user->isTeacher() || $user->isAdmin()) && ($this->ownedOrAdministeredBy($user) || $this->isTeacherOf($user));
     }
 
     /** In der Klassenbibliothek sichtbare eigene Bücher / Own books visible in the class library */
@@ -252,8 +304,28 @@ class Book extends Model
      * is a child's version from a template (same title, visible to the
      * teacher).
      */
+    /**
+     * IDs der Medien, die auf einer Seite des Buchs stehen (als Schlüssel). Ein
+     * Foto, das aus einer Seite entfernt wurde, bleibt zwar gespeichert, gehört
+     * aber nicht mehr in Kopien und in die Datei zum Mitnehmen.
+     *
+     * IDs of the media placed on a page of the book (as keys). A photo removed
+     * from a page stays stored, but no longer belongs in copies and in the
+     * take-home file.
+     */
+    public function usedMediaIds(): array
+    {
+        $ids = [];
+        foreach ($this->pages as $p) {
+            $ids += $p->mediaIds();
+        }
+
+        return $ids;
+    }
+
     public function duplicateFor(User $user, bool $asVersion = false): Book
     {
+        $used = $this->usedMediaIds();
         $copy = Book::create([
             'user_id'         => $user->id,
             'school_class_id' => $user->isPupil() ? $user->school_class_id : $this->school_class_id,
@@ -267,7 +339,12 @@ class Book extends Model
 
         $map = [];
         $disk = Storage::disk('media');
+        // nur Fotos und Töne, die noch auf einer Seite stehen (Gelöschtes wandert nicht mit)
+        // only photos and sounds still on a page (deleted ones do not travel along)
         foreach ($this->media as $m) {
+            if (! isset($used[$m->id])) {
+                continue;
+            }
             $newPath = $copy->id . '/' . basename($m->path);
             if ($disk->exists($m->path)) {
                 $disk->copy($m->path, $newPath);

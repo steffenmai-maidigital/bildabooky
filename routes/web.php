@@ -52,24 +52,28 @@ Route::get('/logout', fn () => redirect()->route('home'));
 Route::middleware(['auth', 'class-session'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // Eigenes Konto: Passwort und Zwei-Faktor
-    // Own account: password and two-factor
+    // Eigenes Konto: Passwort und Zwei-Faktor – erreichbar, auch solange das Startpasswort
+    // oder die Pflicht-Einrichtung des zweiten Faktors noch aussteht (Standard 09)
+    // Own account: password and two-factor – reachable even while the initial password
+    // or the mandatory two-factor setup is still pending (standard 09)
     Route::get('/account', [AccountController::class, 'show'])->name('account');
     Route::put('/account/password', [AccountController::class, 'password'])->name('account.password');
-    Route::put('/account/fox', [AccountController::class, 'fox'])->name('account.fox');
+    Route::put('/account/companion', [AccountController::class, 'companion'])->name('account.companion');
     Route::post('/account/2fa', [AccountController::class, 'startTwoFactor'])->name('account.2fa.start');
     Route::post('/account/2fa/confirm', [AccountController::class, 'confirmTwoFactor'])->name('account.2fa.confirm');
     Route::post('/account/2fa/codes', [AccountController::class, 'recoveryCodes'])->name('account.2fa.codes');
     Route::delete('/account/2fa', [AccountController::class, 'disableTwoFactor'])->name('account.2fa.disable');
-
-    // Hilfe (Standard 03): Kurzanleitung, System, Lizenz, Handbücher, Changelog, Fehler, Support
-    // Help (Standard 03): quick guide, system, licence, manuals, changelog, errors, support
-    Route::get('/help', [HelpController::class, 'show'])->name('help');
-    Route::get('/help/manual/{doc}', [HelpController::class, 'doc'])->name('help.doc');
 });
 
 Route::middleware(['auth', 'class-session', 'password-changed'])->group(function () {
     Route::get('/', [LibraryController::class, 'index'])->name('home');
+
+    // Hilfe (Standard 03): Kurzanleitung, System, Lizenz, Handbücher, Changelog, Fehler, Support;
+    // erst nach Startpasswort und Pflicht-Einrichtung des zweiten Faktors (Standard 09)
+    // Help (Standard 03): quick guide, system, licence, manuals, changelog, errors, support;
+    // only after the initial password and the mandatory two-factor setup (standard 09)
+    Route::get('/help', [HelpController::class, 'show'])->name('help');
+    Route::get('/help/manual/{doc}', [HelpController::class, 'doc'])->name('help.doc');
 
     // Bücher
     // Books
@@ -113,6 +117,7 @@ Route::middleware(['auth', 'class-session', 'password-changed'])->group(function
         Route::get('/users/{user}', [UserController::class, 'edit'])->name('users.edit');
         Route::patch('/users/{user}', [UserController::class, 'update'])->name('users.update');
         Route::post('/users/{user}/password', [UserController::class, 'resetPassword'])->name('users.password');
+        Route::post('/users/{user}/unlock', [UserController::class, 'unlock'])->name('users.unlock');
         Route::delete('/users/{user}/2fa', [UserController::class, 'resetTwoFactor'])->name('users.2fa');
         Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 
@@ -141,7 +146,10 @@ Route::middleware(['auth', 'class-session', 'password-changed'])->group(function
         Route::patch('/subjects/{subject}', [SubjectController::class, 'update'])->name('subjects.update');
         Route::post('/subjects/{subject}/move', [SubjectController::class, 'move'])->name('subjects.move');
         Route::delete('/subjects/{subject}', [SubjectController::class, 'destroy'])->name('subjects.destroy');
-        Route::get('/backup', [BackupController::class, 'download'])->name('backup');
+        // Sicherung nur per Formular mit Passwort bzw. App-Code; GET führt zum Formular
+        // Backup only via a form with password or app code; GET leads to the form
+        Route::get('/backup', [BackupController::class, 'show'])->name('backup.show');
+        Route::post('/backup', [BackupController::class, 'download'])->name('backup')->middleware('throttle:10,1,backup');
 
         Route::get('/settings', [SettingsController::class, 'show'])->name('settings');
         Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');

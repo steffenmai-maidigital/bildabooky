@@ -39,10 +39,10 @@ own server (e.g. a Synology NAS on the school network):
 | Formats | portrait, square, landscape |
 | Reading | turn pages with buttons, swiping or arrow keys, full screen, tap to play sounds |
 | Sharing | two buttons on your own book: **with the teacher** (appears for them under “Children’s books” in the “Shared” group) or **with the class** (all children can read it) |
-| Fox helper | Rua the fox (a Viking fox from a Norwegian fjord village whom the Irish called “the red one”), animated in the bottom right, greets you by name, praises you after saving and gives tips suited to your role and page; in the editor he reacts to what you do, when reading he keeps you company while you turn the pages; on his own he speaks at most every 3 minutes; “Put to sleep” leaves him sleeping until you tap him; on the login page he promotes free software (with a link to `SOURCE_URL`); respects “reduce motion”. Admins can switch him off centrally, everyone can switch him off for themselves in their account |
+| Companion Cara | a black cat in the bottom right who sleeps until you tap her; then she gives tips suited to your role and page. She only speaks on her own in reply to an action: after saving (“Saved.”), on an error message and inside a book after actions (e.g. photo added, handed in, last page). Nothing appears after a time. She has no opinions, only facts; on the login page she tells you about free software after a tap (with a link to `SOURCE_URL`). Can be dragged or moved with the arrow keys, “Put to sleep” keeps her quiet, respects “reduce motion”. Admins can switch her off centrally, everyone can hide her for themselves in their account ([docs/CARA.md](docs/CARA.md)) |
 | Summer holiday mode | admins set a date; at 3 a.m. on that day all student accounts are permanently deleted together with their books, photos, recordings and log entries — with a backup beforehand and a notice to the children three weeks in advance |
 | Class book | the whole class writes in one book together; changes by others appear after a few seconds, simultaneous edits to the same page are merged, and you can see who is working where |
-| Classes and subjects | admins create classes and subjects and set for each class which subjects it has and who teaches them; a class can have several teachers, a teacher several classes with different subjects. Children see their books sorted by subject, create them in a subject and move them; all teachers of a class see all its books, with a subject filter (own subjects first) |
+| Classes and subjects | admins create classes and subjects and set for each class which subjects it has and who teaches them; a class can have several teachers, a teacher several classes with different subjects. Children see their books sorted by subject, create them in a subject and move them; all teachers of a class see all children’s books, class books and templates of the class, with a subject filter (own subjects first); a teacher’s own books are seen only by that teacher and the admins |
 | Templates | the teacher provides a book, each child creates their own version; “Children's versions” overview showing “started” and “handed in” |
 | Change log | per book: who changed what and when (text, pictures, pages, title, sharing, hand-in) — for teachers and admins only |
 | Output | print / PDF (A4 or square), file to take home |
@@ -50,19 +50,19 @@ own server (e.g. a Synology NAS on the school network):
 | Login cards | optional: additionally store the password encrypted so cards can be reprinted at any time |
 | School directory | optional under **Settings → 9**: teachers and admins sign in with their school account (LDAP bind, no password in BilDaBooky); role from groups (teachers, admins), account created at first sign-in, “Test connection”; own accounts keep working |
 | Login sessions | children can only log in when a teacher of their class has opened login (60/120/180 minutes or up to 7 days, then until 5 pm), with password **and** a 6-digit session code — for children this replaces two-factor login. All teachers of the class see the reason, the code and who is logged in, and can end the session early with a reason (children are logged out). History kept for 60 days. Admins can switch it off |
-| Security | two-factor (TOTP) with recovery codes for teachers and admins — per group mandatory, optional or off, school directory groups with mandatory, exception per person; protection against password guessing |
+| Security | two-factor (TOTP) with recovery codes for teachers and admins — per group mandatory, optional or off, school directory groups with mandatory, exception per person; protection against password guessing; lock accounts of teachers and admins (“Account active”, the session ends at once); a password change ends the other sessions |
 | Languages | German, English, French, Spanish. The language is detected from the browser and can be switched. Anything missing is shown in German. |
 | Branding | admins set the school name, logo, colours (accent, header, background), footer text and domain directly in the interface |
 | Imprint and privacy policy | can be switched on individually, as your own text or a link to the school website; reachable without logging in, linked on the login page and in the footer; with a template for the privacy policy (written for German schools) |
 | Help | quick guide, system, licence, latest errors of the past 30 days (admins, with “Clear log”) and changelog under “Help” in the footer |
-| Operations | Docker, SQLite, nightly backup (database + media as ZIP) |
+| Operations | Docker, SQLite, nightly backup (database + media as ZIP), removed photos and sounds are deleted after 30 days |
 
 ## Roles
 
 | Role | May |
 |---|---|
-| **Admin** | a tick on a teacher (“Also admin”) — administration: create classes and subjects, manage teachers and admins, branding, domain and licence, download backups. **No** access to other people’s books — except in classes the admin teaches (then like a teacher) |
-| **Leiter** (leader, i.e. teacher) | leads one or more classes: adds students there, resets passwords, prints login cards; creates class books and templates; sees and edits **all** books of their class; reads the change log |
+| **Admin** | a tick on a teacher (“Also admin”) — administration: create classes and subjects, manage teachers and admins, branding, domain and licence, lock accounts, download backups (with password). **No** access to children’s books, class books or templates — except in classes the admin teaches (then like a teacher); teachers’ own books are always visible to admins and can be managed by them |
+| **Leiter** (leader, i.e. teacher) | leads one or more classes: adds students there, resets passwords, prints login cards; creates class books and templates; sees and edits **all** children’s books, class books and templates of their class; reads the change log; their own books are seen only by them and the admins |
 | **Ersteller** (creator, i.e. student) | create, share and take home their own books; write in class books; create their own version from templates and hand it in; read books shared with the class |
 
 ### Who sees which book?
@@ -76,7 +76,9 @@ own server (e.g. a Synology NAS on the school network):
 | template | — | view, start own version | edit, versions, change log |
 | version from a template | edit, hand in | — | always visible, help, change log, give a handed-in version back with a message |
 
-Admins don’t see other people’s books. If an admin also teaches, assign them to classes and subjects like a teacher; they then see exactly the books of those classes. Note: the backup technically contains all data — whoever may download it (admins) can access everything.
+A teacher’s own books (no class book, no template) are seen, edited, printed, copied and deleted only by that teacher and the admins — photos, sounds and the change log included. Other teachers of the class do not see them. If the teacher shares one “with the teacher”, the other teachers of the class can read it, “with the class” the children as well; they cannot edit it.
+
+Admins don’t see children’s books, class books or templates. If an admin also teaches, assign them to classes and subjects like a teacher; they then see exactly the books of those classes. Teachers’ own books are always visible to admins. Note: the backup technically contains all data — whoever may download it (admins, with their password) can access everything.
 
 ## Guides
 
@@ -236,13 +238,16 @@ The `APP_KEY` is generated on the first start and stored in the data volume
 (`/data/.app_key`). This keeps logins, two-factor secrets and login cards
 valid even after the container is recreated. **This file is part of the
 backup.** Without it, two-factor and stored cards can no longer be
-decrypted.
+decrypted. The nightly backups in the `backups` folder contain it, the
+backup downloaded in the browser does not: keep the key separately (e.g. in
+a password manager).
 
 ### Data and backups
 
 - `app-data` (volume): database `bildabooky.sqlite`, media under `medien/`, `.app_key`
-- `./backups`: a ZIP with database and media every night at 2:30 a.m.
-- Admins can download a backup at any time under **Classes → Download backup**.
+- `./backups`: a ZIP with database, media and `.app_key` every night at 2:30 a.m.
+- Admins can download a backup at any time under **Classes → Download backup**. They confirm with their password (school accounts: a code from the authenticator app); the file does not contain the app key.
+- Photos, drawings and sounds that are no longer on any page are deleted by BilDaBooky after 30 days (at night, `bildabooky:prune-media`).
 
 Restoring and moving: see [installation/en/operations.md](installation/en/operations.md).
 

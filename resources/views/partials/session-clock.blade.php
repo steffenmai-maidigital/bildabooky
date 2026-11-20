@@ -9,7 +9,8 @@
     @once
     <script>
         (function () {
-            const T = @json(['day' => __(':n Tag'), 'days' => __(':n Tage'), 'hours' => __(':n Std.')]);
+            @php($clockTexts = ['day' => __(':n Tag'), 'days' => __(':n Tage'), 'hours' => __(':n Std.')])
+            const T = @json($clockTexts);
             const start = Date.now();
             function text(s) {
                 if (s >= 86400) {

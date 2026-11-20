@@ -174,6 +174,16 @@ class UserController extends Controller
         if ($actor->isAdmin()) {
             $user->mfa_policy = $data['mfa_policy'];
         }
+        // Konto aktiv: nur Admins, nur Konten von Lehrkräften und Admins, nie das eigene;
+        // fehlt das Feld (ältere Formulare), bleibt es, wie es ist. Kinder sind immer aktiv.
+        // Account active: admins only, only accounts of teachers and admins, never one's own;
+        // if the field is missing (older forms), it stays as it is. Children are always active.
+        $wasActive = (bool) $user->active;
+        if ($user->isPupil()) {
+            $user->active = true;
+        } elseif ($request->has('active') && $actor->canLock($user)) {
+            $user->active = $request->boolean('active');
+        }
         if ($data['password']) {
             \Illuminate\Support\Facades\RateLimiter::clear(AuthController::lockKey($user->username));
             $user->password = $data['password'];
@@ -192,7 +202,13 @@ class UserController extends Controller
                 ->whereNotIn('school_class_id', $classes)->delete();
         }
 
-        return redirect()->route('users.index')->with('ok', __('Änderungen gespeichert.'));
+        $message = match (true) {
+            $wasActive && ! $user->active => __('Änderungen gespeichert. :name ist gesperrt und wird bei der nächsten Aktion abgemeldet.', ['name' => $user->name]),
+            ! $wasActive && $user->active => __('Änderungen gespeichert. :name kann sich wieder anmelden.', ['name' => $user->name]),
+            default                       => __('Änderungen gespeichert.'),
+        };
+
+        return redirect()->route('users.index')->with('ok', $message);
     }
 
     public function resetPassword(Request $request, User $user)
@@ -234,11 +250,33 @@ class UserController extends Controller
         return view('manage.cards', ['credentials' => $cards]);
     }
 
+    /**
+     * Zwei-Faktor einer anderen Person zurücksetzen (verlorenes Handy). Die eigene nie hier:
+     * das ginge ohne Passwort und an einer Pflicht vorbei – dafür ist die Konto-Seite da.
+     *
+     * Reset another person's two-factor (lost phone). Never one's own here:
+     * that would work without a password and around a duty – the account page is for that.
+     */
     public function resetTwoFactor(Request $request, User $user)
     {
-        abort_unless($request->user()->manages($user), 403);
+        abort_unless($request->user()->manages($user) && ! $user->is($request->user()), 403);
         $user->disableTwoFactor();
         return back()->with('ok', __('Zwei-Faktor-Anmeldung für :name zurückgesetzt.', ['name' => $user->name]));
+    }
+
+    /**
+     * Anmeldesperre nach zu vielen Fehlversuchen aufheben, ohne ein neues Passwort
+     * zu vergeben (z. B. wenn ein Mitschüler den Namen falsch eingetippt hat).
+     *
+     * Lift the sign-in lock after too many failed attempts without assigning a new
+     * password (e.g. when a classmate typed the name with a wrong password).
+     */
+    public function unlock(Request $request, User $user)
+    {
+        abort_unless($request->user()->manages($user) && ! $user->is($request->user()), 403);
+        \Illuminate\Support\Facades\RateLimiter::clear(AuthController::lockKey($user->username));
+
+        return back()->with('ok', __('Anmeldesperre für :name aufgehoben.', ['name' => $user->name]));
     }
 
     public function destroy(Request $request, User $user)

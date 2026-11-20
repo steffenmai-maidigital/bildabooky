@@ -3,7 +3,7 @@
     --bg: #fbf7f0;
     --panel: #ffffff;
     --ink: #26324a;
-    --muted: #6b7690;
+    --muted: #5a647d;   /* WCAG AA auch auf Flächen / AA also on surfaces */
     --line: #e7e0d4;
     --accent: #ff7a3d;
     --accent-ink: #ffffff;
@@ -11,14 +11,14 @@
     --accent-strong: color-mix(in srgb, var(--accent) 72%, #000);
     --header-bg: #fff;
     --header-ink: #26324a;
-    --blue: #3d7bff;
+    --blue: #2563eb;    /* Links und blaue Knöpfe mit Kontrast ≥ 4,5 / links and blue buttons with contrast ≥ 4.5 */
     --green: #2a9d8f;
-    --danger: #c0392b;
+    --danger: #b5352a;
     --radius: 16px;
     --shadow: 0 6px 20px rgba(38, 50, 74, .08);
     --font: "Avenir Next", "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
     --tap: 48px;
-    /* für die gemeinsamen Bausteine (Fuchs) / for the shared building blocks (fox) */
+    /* für die gemeinsamen Bausteine (Begleiterin) / for the shared building blocks (companion) */
     --link: var(--blue);
     --chip: #f2ede4;
 }
@@ -85,6 +85,10 @@ table.list th { font-size: .85rem; color: var(--muted); font-weight: 600; }
 .badge.teacher { background: #dff1ff; color: #1b5f99; }
 .badge.pupil { background: #fff0d9; color: #8a5300; }
 .badge.ok { background: #e3f6ef; color: #1d6b52; }
+/* gesperrtes Konto in der Benutzerliste / locked account in the user list */
+.badge.locked { background: #fbe1dd; color: var(--danger); }
+/* Fehlermeldung direkt am Feld / error message right at the field */
+.field-error { margin: .25rem 0 0; color: var(--danger); font-size: .85rem; font-weight: 600; }
 .table-scroll { overflow-x: auto; }
 
 /* ---- Anmeldung / Sign-in ---- */
@@ -271,133 +275,170 @@ details.collapsible > summary h2 { margin: 0; font-size: 1.15rem; }
 details.collapsible[open] > summary { margin-bottom: .6rem; }
 
 /* ============================================================
-   Fuchs-Helfer (gemeinsamer Baustein, Standard 03) — unten rechts.
+   Cara, die Begleiterin (docs/CARA.md) — unten rechts, schläft, bis man sie
+   antippt. Die Teile der Zeichnung heißen k-* (zwei Haltungen: k-rolle
+   eingerollt, k-sitzt wach). Nur die gemalten Teile der Katze nehmen
+   Klicks an, damit die leere Fläche über der schlafenden Katze nichts
+   verdeckt. Auf dunklem Grund (Dunkelmodus, Leseansicht) bekommt die
+   schwarze Katze eine feine helle Lichtkante.
    Erwartet die Variablen --panel, --ink, --muted, --accent, --accent-ink, --link.
 
-   Fox helper (shared building block, Standard 03) — bottom right.
+   Cara, the companion (docs/CARA.md) — bottom right, sleeps until tapped.
+   The parts of the drawing are called k-* (two postures: k-rolle curled up,
+   k-sitzt awake). Only the painted parts of the cat take clicks, so the
+   empty area above the sleeping cat covers nothing. On a dark background
+   (dark mode, reader) the black cat gets a fine light rim.
    Expects the variables --panel, --ink, --muted, --accent, --accent-ink, --link.
    ============================================================ */
-.fox { position: fixed; right: 14px; bottom: 10px; z-index: 30; display: flex; align-items: flex-end; gap: .4rem; pointer-events: none;
-    transform: translateY(140%); transition: transform .5s cubic-bezier(.2,1.4,.4,1); }
-.fox.shown { transform: none; }
-.fox > * { pointer-events: auto; }
-/* all: unset setzt auch pointer-events zurück – die Figur erbte sonst none vom Rahmen,
-   echte Klicks gingen durch den Fuchs hindurch. Darum pointer-events direkt dahinter.
-   all: unset also resets pointer-events – the figure would inherit none from the frame
-   and real clicks would pass through the fox. Hence pointer-events right after it. */
-.fox-figure { all: unset; pointer-events: auto; cursor: pointer; display: block; width: 96px; height: 96px; filter: drop-shadow(0 6px 10px rgba(0,0,0,.15)); }
-.fox-figure:focus-visible { outline: 3px solid var(--link); border-radius: 50%; }
-.fox-figure svg { display: block; overflow: visible; }
-.fox-figure svg g { transform-box: view-box; }
-.fox-bubble { position: relative; max-width: min(300px, calc(100vw - 140px)); background: var(--panel); color: var(--ink); border-radius: 18px 18px 4px 18px;
-    padding: .75rem 1rem .6rem; box-shadow: 0 10px 30px rgba(20,30,45,.22); margin-bottom: 64px; font-weight: 600; font-size: .92rem; line-height: 1.4; animation: bubble-in .25s ease-out; }
-.fox-bubble::after { content: ""; position: absolute; right: -8px; bottom: 10px; border: 9px solid transparent; border-left-color: var(--panel); border-right: 0; }
-.fox-text { margin: 0 1.2rem .5rem 0; }
-.fox-bubble-buttons { display: flex; gap: .4rem; flex-wrap: wrap; }
-.fox-bubble-buttons button { min-height: 32px; padding: .2rem .65rem; font-size: .8rem; font: inherit; font-size: .8rem; border: 1px solid var(--line); border-radius: 999px; background: var(--chip); color: var(--ink); cursor: pointer; margin: 0; }
-.fox-next { background: var(--accent) !important; color: var(--accent-ink) !important; border-color: transparent !important; }
-.fox-link { display: inline-flex; align-items: center; min-height: 32px; padding: .2rem .65rem; border-radius: 999px; background: color-mix(in srgb, var(--link) 14%, transparent); color: var(--link); font-size: .8rem; font-weight: 700; text-decoration: none; }
-.fox-close { position: absolute; top: .25rem; right: .3rem; min-height: 28px !important; width: 28px; padding: 0 !important; background: none !important; border: none !important; color: var(--muted) !important; font-size: 1.2rem; }
-@keyframes bubble-in { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+.companion { position: fixed; right: 14px; bottom: 8px; z-index: 30; display: block; line-height: 0; }
+/* all: unset setzt auch pointer-events zurück – darum danach none: nur die Zeichnung nimmt Klicks an
+   all: unset also resets pointer-events – hence none afterwards: only the drawing takes clicks */
+.companion-figure { all: unset; pointer-events: none; display: block; width: 96px; height: 122px; border-radius: 18px; }
+.companion-figure:focus-visible { outline: 3px solid var(--link); outline-offset: 2px; }
+.companion-figure svg { display: block; width: 100%; height: 100%; overflow: visible; pointer-events: none;
+    filter: drop-shadow(0 4px 7px rgba(0, 0, 0, .16)); transition: transform .18s ease; }
+.companion-figure svg g { transform-box: view-box; }
+.companion-figure .k-rolle, .companion-figure .k-sitzt { pointer-events: visiblePainted; cursor: grab; touch-action: none; }
+.companion-figure:hover svg { transform: translateY(-2px); }
+.companion.dragging .companion-figure .k-rolle, .companion.dragging .companion-figure .k-sitzt { cursor: grabbing; }
+.companion.dragging, .companion.dragging * { transition: none !important; user-select: none; -webkit-user-select: none; }
 
-/* Animationen / Animations */
-.f-tail { transform-origin: 74px 92px; animation: f-wag 2.6s ease-in-out infinite; }
-.f-body { transform-origin: 58px 108px; animation: f-breathe 3.2s ease-in-out infinite; }
-.f-head { transform-origin: 58px 76px; animation: f-head 7s ease-in-out infinite; }
-.f-eyes { transform-origin: 58px 47px; animation: f-blink 5s infinite; }
-.f-ear-l { transform-origin: 40px 34px; animation: f-ear 8s infinite; }
-.f-ear-r { transform-origin: 76px 34px; animation: f-ear 9s 1s infinite; }
-.f-paw { opacity: 0; transform-origin: 38px 84px; }
-.f-sleep-eyes, .f-zzz { opacity: 0; }
-.f-zzz text { fill: var(--muted); transform-box: fill-box; transform-origin: center; }
-.fox.waving .f-paw { opacity: 1; animation: f-wave .5s ease-in-out 4 alternate; }
-.fox.speaking .f-mouth { d: path("M52 66 Q 58 74 64 66"); }
-.fox.hopping .fox-figure svg { animation: f-hop .45s ease-out; }
-.fox.asleep .f-eyes { opacity: 0; }
-.fox.asleep .f-sleep-eyes { opacity: 1; }
-.fox.asleep .f-zzz, .fox.deep-sleep .f-zzz { opacity: 1; }
-.fox.asleep .f-zzz text, .fox.deep-sleep .f-zzz text { opacity: 0; animation: f-zzz 3s ease-in-out infinite; }
-.fox .f-z2 { animation-delay: 1s !important; }
-.fox .f-z3 { animation-delay: 2s !important; }
-/* Tiefschlaf: hingelegt — Kopf unten, Schwanz eingerollt, ruhiges Atmen
+/* Die Zeichnung: ganz schwarz, bernsteingelbe Augen / The drawing: all black, amber eyes */
+.companion .k-fell { fill: #17141a; }
+.companion .k-ohr { fill: #4a2f3a; }
+.companion .k-schnauze { fill: #2e2733; }
+.companion .k-glanz-fein { fill: none; stroke: rgba(255, 255, 255, .13); stroke-width: 1.6; stroke-linecap: round; }
+.companion .k-mund { fill: none; stroke: #4e4257; stroke-width: 1.7; stroke-linecap: round; }
+.companion .k-licht { fill: none; stroke: rgba(255, 255, 255, .1); stroke-width: 3; stroke-linecap: round; }
+.companion .k-umriss { fill: #17141a; stroke: #3a3142; stroke-width: 1.8; stroke-linejoin: round; }
+.companion .k-lid { fill: none; stroke: #241e2a; stroke-width: 1.6; stroke-linecap: round; }
+.companion .k-brauen { fill: none; stroke: #cfc6cd; stroke-width: .8; stroke-linecap: round; opacity: .55; }
+.companion .k-nase { fill: #b9798c; }
+.companion .k-schatten { fill: #3a281c; opacity: .17; }
+.companion .k-strich { fill: none; stroke: #6b5c74; stroke-width: 2; stroke-linecap: round; }
+.companion .k-strich-fein { fill: none; stroke: #3a3340; stroke-width: 1.1; stroke-linecap: round; }
+.companion .k-haare { fill: none; stroke: #efe9ee; stroke-width: 1.05; stroke-linecap: round; opacity: .8; }
+.companion .k-schwanz { fill: none; stroke: #17141a; stroke-width: 11; stroke-linecap: round; }
+.companion .k-schwanz-duenn { fill: none; stroke: #17141a; stroke-width: 8.5; stroke-linecap: round; }
+.companion .k-saum { fill: none; stroke: #403747; stroke-width: 14.5; stroke-linecap: round; }
+.companion .k-auge { fill: #f7cf43; }
+.companion .k-pupille { fill: #140f0a; }
+.companion .k-glanz { fill: #fff; opacity: .95; }
+.companion .k-glanz--klein { opacity: .6; }
+.companion .k-wange { fill: #c0718a; opacity: .18; }
+.companion .k-zzz { pointer-events: none; }
+.companion .k-z { font-family: var(--font); font-weight: 800; font-size: 15px; fill: var(--muted); opacity: 0; }
 
-   Deep sleep: lying down — head down, tail curled up, calm breathing */
-.fox.deep-sleep .f-eyes, .fox.deep-sleep .f-paw { opacity: 0; }
-.fox.deep-sleep .f-sleep-eyes { opacity: 1; }
-.fox.deep-sleep .f-head { animation: none; transform: translate(4px, 22px) rotate(14deg); transition: transform .6s ease; }
-.fox.deep-sleep .f-ear-l, .fox.deep-sleep .f-ear-r { animation: none; transform: rotate(-8deg); }
-.fox.deep-sleep .f-body { animation: f-sleep-breathe 4s ease-in-out infinite; }
-.fox.deep-sleep .f-tail { animation: none; transform: rotate(58deg) translate(-6px, 4px); transition: transform .6s ease; }
-.fox.deep-sleep .f-mouth { opacity: .4; }
-.fox.deep-sleep .fox-figure { filter: drop-shadow(0 4px 6px rgba(0,0,0,.12)) saturate(.85); }
-@keyframes f-sleep-breathe { 0%, 100% { transform: scale(1.06, .78); } 50% { transform: scale(1.08, .82); } }
-.fox.asleep .f-tail { animation-duration: 6s; }
-@keyframes f-wag { 0%, 100% { transform: rotate(-7deg); } 50% { transform: rotate(9deg); } }
-@keyframes f-breathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.035); } }
-@keyframes f-head { 0%, 70%, 100% { transform: rotate(0); } 78% { transform: rotate(-6deg); } 88% { transform: rotate(4deg); } }
-@keyframes f-blink { 0%, 93%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
-@keyframes f-ear { 0%, 90%, 100% { transform: rotate(0); } 93% { transform: rotate(-12deg); } 96% { transform: rotate(4deg); } }
-@keyframes f-wave { from { transform: rotate(10deg); } to { transform: rotate(-18deg); } }
-@keyframes f-hop { 30% { transform: translateY(-14px) scale(1.05, .95); } 60% { transform: translateY(0) scale(.97, 1.03); } }
-@keyframes f-zzz { 0% { transform: translate(0, 6px) scale(.6); opacity: 0; } 25% { opacity: 1; } 100% { transform: translate(8px, -12px) scale(1.1); opacity: 0; } }
+/* Haltung: eingerollt und schlafend (Klasse asleep) oder wach sitzend
+   Posture: curled up asleep (class asleep) or sitting awake */
+.companion .k-rolle, .companion .k-zzz { display: none; }
+.companion.asleep .k-sitzt { display: none; }
+.companion.asleep .k-rolle, .companion.asleep .k-zzz { display: inline; }
+.companion:not(.asleep) .k-sitzt { transform-origin: 52px 138px; animation: companion-stretch .5s cubic-bezier(.34, 1.56, .64, 1); }
+.companion .k-wedel { transform-origin: 74px 132px; animation: companion-wag 13s ease-in-out infinite; }
+.companion .k-wedel-spitze { transform-origin: 99px 83px; animation: companion-tip 3.7s ease-in-out infinite; }
+.companion .k-rumpf { transform-origin: 52px 138px; animation: companion-breathe 3.6s ease-in-out infinite; }
+.companion .k-augen { transform-origin: 52px 46px; animation: companion-blink 8.4s infinite; }
+.companion .k-kopf { transform-origin: 52px 72px; animation: companion-head 11s ease-in-out infinite; }
+.companion .k-rolle { transform-origin: 80px 116px; animation: companion-sleep-breathe 4.2s ease-in-out infinite; }
+.companion .k-z1 { animation: companion-z 3.4s ease-in-out infinite; }
+.companion .k-z2 { animation: companion-z 3.4s ease-in-out infinite 1.7s; font-size: 12px; }
+@keyframes companion-wag {
+    0% { transform: rotate(-3deg); } 10% { transform: rotate(2.5deg); } 18% { transform: rotate(-2deg); }
+    24% { transform: rotate(6deg); } 28% { transform: rotate(-9deg); } 31% { transform: rotate(5deg); }
+    34% { transform: rotate(-4deg); } 37% { transform: rotate(3deg); } 50% { transform: rotate(-1deg); }
+    62% { transform: rotate(7deg); } 74% { transform: rotate(-6deg); } 84% { transform: rotate(1deg); }
+    88% { transform: rotate(-12deg); } 91% { transform: rotate(8deg); } 94% { transform: rotate(-2deg); }
+    100% { transform: rotate(-3deg); }
+}
+@keyframes companion-tip { 0%, 100% { transform: rotate(-7deg); } 30% { transform: rotate(10deg); } 55% { transform: rotate(-12deg); } 70% { transform: rotate(14deg); } }
+@keyframes companion-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.022); } }
+@keyframes companion-blink { 0%, 72%, 100% { transform: scaleY(1); } 75% { transform: scaleY(.08); } 78% { transform: scaleY(1); } 82% { transform: scaleY(.12); } 85% { transform: scaleY(1); } }
+@keyframes companion-head { 0%, 26%, 100% { transform: rotate(0deg); } 32% { transform: rotate(-5.5deg); } 44% { transform: rotate(-5deg); } 50% { transform: rotate(0deg); } 70% { transform: rotate(3.5deg); } 78% { transform: rotate(3deg); } 84% { transform: rotate(0deg); } }
+@keyframes companion-stretch { 0% { transform: scaleY(.62) scaleX(1.12); } 60% { transform: scaleY(1.06) scaleX(.97); } 100% { transform: scaleY(1) scaleX(1); } }
+@keyframes companion-sleep-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.012, 1.03); } }
+@keyframes companion-z { 0% { opacity: 0; transform: translate(0, 4px) scale(.8); } 25% { opacity: .75; } 100% { opacity: 0; transform: translate(7px, -14px) scale(1.15); } }
+
+/* Lichtkante auf dunklem Grund: Dunkelmodus und Leseansicht
+   Light rim on a dark background: dark mode and reader */
+html[data-theme="dark"] .companion-figure svg,
+.companion.on-reading .companion-figure svg { filter: drop-shadow(0 0 .8px rgba(240, 233, 246, .95)) drop-shadow(0 0 1.6px rgba(240, 233, 246, .45)) drop-shadow(0 4px 8px rgba(0, 0, 0, .4)); }
+html[data-theme="dark"] .companion .k-licht,
+.companion.on-reading .k-licht { stroke: rgba(255, 255, 255, .3); }
+html[data-theme="dark"] .companion .k-umriss,
+.companion.on-reading .k-umriss { stroke: #8f84a0; }
+.companion.on-reading .k-z { fill: #c9d2e3; }
+
+/* Blase: hängt an der Figur und klappt zur freien Seite (at-left, at-top)
+   Bubble: hangs on the figure and flips to the free side (at-left, at-top) */
+.companion-bubble { position: absolute; right: calc(100% + .3rem); bottom: 56px; width: max-content; max-width: min(300px, calc(100vw - 130px));
+    background: var(--panel); color: var(--ink); border-radius: 18px 18px 4px 18px; padding: .75rem 1rem .6rem;
+    box-shadow: 0 10px 30px rgba(20, 30, 45, .22); font-weight: 600; font-size: .95rem; line-height: 1.4; animation: companion-bubble-in .25s ease-out; }
+.companion-bubble::after { content: ""; position: absolute; right: -8px; bottom: 12px; border: 9px solid transparent; border-left-color: var(--panel); border-right: 0; }
+.companion.at-left .companion-bubble { right: auto; left: calc(100% + .3rem); border-radius: 18px 18px 18px 4px; }
+.companion.at-left .companion-bubble::after { right: auto; left: -8px; border: 9px solid transparent; border-right-color: var(--panel); border-left: 0; }
+.companion.at-top .companion-bubble { bottom: auto; top: 40px; }
+.companion.at-top .companion-bubble::after { bottom: auto; top: 12px; }
+.companion-text { margin: 0 1.6rem .55rem 0; }
+.companion-buttons { display: flex; gap: .4rem; flex-wrap: wrap; }
+.companion-buttons button, .companion-link { min-height: 44px; padding: .2rem .8rem; font: inherit; font-size: .85rem; font-weight: 700; border: 1px solid var(--line);
+    border-radius: 999px; background: var(--chip); color: var(--ink); cursor: pointer; margin: 0; display: inline-flex; align-items: center; text-decoration: none; }
+.companion-buttons .companion-next { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.companion-link { background: color-mix(in srgb, var(--link) 14%, transparent); color: var(--link); border-color: transparent; }
+.companion-close { position: absolute; top: 0; right: 0; min-height: 44px; width: 44px; padding: 0; background: none; border: 0; color: var(--muted); font-size: 1.3rem; border-radius: 0 18px 0 12px; }
+.companion-close:hover { color: var(--ink); filter: none; }
+@keyframes companion-bubble-in { from { opacity: 0; transform: translateY(8px) scale(.96); } }
+/* Knöpfe in der Blase und die Figur ohne allgemeine Knopf-Farben (auch im Dunkelmodus)
+   Buttons in the bubble and the figure without general button colours (also in dark mode) */
+.companion .companion-figure, .companion .companion-figure:hover, .companion .companion-figure:focus { background: none; box-shadow: none; border: 0; }
+html[data-theme="dark"] .companion-bubble { background: var(--panel); color: var(--ink); }
+html[data-theme="dark"] .companion-bubble::after { border-left-color: var(--panel); }
+html[data-theme="dark"] .companion.at-left .companion-bubble::after { border-left-color: transparent; border-right-color: var(--panel); }
+html[data-theme="dark"] .companion-buttons button { background: var(--surface-light); color: var(--ink); }
+html[data-theme="dark"] .companion-buttons .companion-next { background: var(--accent); color: var(--accent-ink); }
+html[data-theme="dark"] .companion-link { background: #1f3550; color: #a9cdf5; }
+html[data-theme="dark"] .companion .companion-close { background: none; color: var(--muted); }
 
 @media (prefers-reduced-motion: reduce) {
-    .fox, .fox * { animation: none !important; transition: none !important; }
+    .companion, .companion * { animation: none !important; transition: none !important; }
+    .companion .k-z { opacity: .75; }
 }
 @media (max-width: 640px) {
-    .fox-figure, .fox-figure svg { width: 72px; height: 72px; }
-    .fox-bubble { margin-bottom: 48px; }
+    .companion-figure { width: 72px; height: 92px; }
+    .companion-bubble { bottom: 44px; }
+    .companion.at-top .companion-bubble { top: 30px; }
 }
-@media print { .fox { display: none !important; } }
+@media print { .companion { display: none !important; } }
+/* Platz unter dem Footer, damit sich das Seitenende über die schlafende Katze rollen lässt
+   Room below the footer so that the end of the page can be scrolled above the sleeping cat */
+@media (max-width: 900px) { body:has(#companion.on-page, #companion.on-login) footer.bottom { padding-bottom: 6.5rem; } }
+/* Auf Tablet-Breite steht die Fußzeile ohne Scrollen ganz unten, direkt neben der
+   Katze: links und rechts Rand lassen, damit ihr Text nicht unter Cara läuft
+   At tablet width the footer sits at the very bottom without scrolling, right next
+   to the cat: leave margin on both sides so that its text does not run under Cara */
+@media (min-width: 600px) and (max-width: 900px) { body:has(#companion.on-page, #companion.on-login) footer.bottom { padding-inline: 8.5rem; } }
 
-/*
- * Verschiebbar (seit 17.10.2026): Die Blase hängt an der Figur und klappt zur
- * freien Seite – nach rechts, wenn Rua links steht, nach unten, wenn er oben
- * steht. Ziehen per Maus oder Finger, die Lage merkt sich der Browser.
- *
- * Draggable (since 17.10.2026): the bubble hangs on the figure and flips to the
- * free side – to the right when Rua stands on the left, downwards when he stands
- * at the top. Drag with mouse or finger; the browser remembers the position.
- */
-.fox-bubble { position: absolute; right: calc(100% + .4rem); bottom: 64px; margin-bottom: 0; width: max-content; }
-.fox.at-left .fox-bubble { right: auto; left: calc(100% + .4rem); border-radius: 18px 18px 18px 4px; }
-.fox.at-left .fox-bubble::after { right: auto; left: -8px; border: 9px solid transparent; border-right-color: var(--panel); border-left: 0; }
-.fox.at-top .fox-bubble { bottom: auto; top: 64px; }
-.fox.at-top .fox-bubble::after { bottom: auto; top: 10px; }
-.fox-figure { touch-action: none; cursor: grab; }
-.fox.dragging, .fox.dragging * { transition: none !important; }
-.fox.dragging .fox-figure { cursor: grabbing; }
+/* BilDaBooky: Cara in der Leseansicht und im Editor / Cara in the reader and in the editor */
+/* Leseansicht: unten rechts neben den Blätter-Knöpfen; die Blase steht über ihnen
+   Reader: bottom right next to the page buttons; the bubble stands above them */
+.companion.on-reading { right: 12px; bottom: 8px; z-index: 5; }
+.companion.on-reading .companion-figure { width: 76px; height: 97px; }
+.companion.on-reading .companion-bubble { max-width: min(280px, calc(100vw - 110px)); bottom: 84px; }
 @media (max-width: 640px) {
-    .fox-bubble { bottom: 48px; }
-    .fox.at-top .fox-bubble { top: 48px; }
+    .companion.on-reading .companion-figure { width: 56px; height: 71px; }
+    .companion.on-reading .companion-bubble { bottom: 84px; max-width: min(280px, calc(100vw - 84px)); }
 }
-/* Die Figur ist ein Knopf ohne Fläche – auch gegen allgemeine Knopf-Regeln wie im Dunkelmodus
-   The figure is a button without a background – also against general button rules such as in dark mode */
-.fox .fox-figure, .fox .fox-figure:hover, .fox .fox-figure:focus { background: none; box-shadow: none; border: 0; }
-
-/* BilDaBooky: Rua in der Leseansicht und im Editor / Rua in the reader and in the editor */
-/* Fuchs in der Leseansicht: unten rechts neben den Blätter-Knöpfen
-
-   Fox in the reader: bottom right next to the page buttons */
-.fox.on-reading { position: absolute; right: 12px; bottom: 10px; z-index: 5; }
-.fox.on-reading .fox-figure, .fox.on-reading .fox-figure svg { width: 76px; height: 76px; }
-.fox.on-reading .fox-bubble { margin-bottom: 52px; max-width: min(260px, 55vw); font-size: .92rem; }
-.fox.on-reading .f-zzz text { fill: #c9d2e3; }
-@media (max-width: 640px) { .fox.on-reading .fox-figure, .fox.on-reading .fox-figure svg { width: 56px; height: 56px; } .fox.on-reading .fox-bubble { margin-bottom: 38px; } }
-/* Fuchs im Editor: unten in der rechten Spalte, die Seite bleibt frei
-
-   Fox in the editor: at the bottom of the right column, the page stays clear */
+/* Editor: unten in der rechten Spalte, die Seite bleibt frei / editor: at the bottom of the right column, the page stays clear */
 .ed-middle { position: relative; }
-.fox.on-editor { position: absolute; right: 10px; bottom: 8px; z-index: 20; }
-.fox.on-editor .fox-figure, .fox.on-editor .fox-figure svg { width: 78px; height: 78px; }
-.fox.on-editor .fox-bubble { margin-bottom: 52px; max-width: min(260px, 45vw); font-size: .92rem; }
-/* Platz, damit der Fuchs nichts verdeckt */
-/* room so the fox covers nothing */
-.ed-properties { padding-bottom: 100px !important; }
+.companion.on-editor { position: absolute; right: 10px; bottom: 6px; z-index: 20; }
+.companion.on-editor .companion-figure { width: 80px; height: 101px; }
+.companion.on-editor .companion-bubble { max-width: min(260px, 45vw); bottom: 48px; }
+/* Platz, damit Cara nichts verdeckt / room so that Cara covers nothing */
+.ed-properties { padding-bottom: 112px !important; }
 @media (max-width: 760px) {
-    .fox.on-editor { bottom: 74px; right: 6px; }   /* über der Werkzeugleiste / above the toolbar */
-    .fox.on-editor .fox-figure, .fox.on-editor .fox-figure svg { width: 56px; height: 56px; }
-    .fox.on-editor .fox-bubble { margin-bottom: 38px; }
+    .companion.on-editor { bottom: 76px; right: 6px; }   /* über der Werkzeugleiste / above the toolbar */
+    .companion.on-editor .companion-figure { width: 60px; height: 76px; }
+    .companion.on-editor .companion-bubble { bottom: 36px; max-width: min(280px, calc(100vw - 84px)); }
     .ed-properties { padding-bottom: .8rem !important; }
 }
 
@@ -484,6 +525,10 @@ details.pupil-section[open] > summary { border-bottom: 1px solid var(--line); ma
 .admin-tick { align-items: flex-start; padding: .6rem .8rem; border-radius: 12px; background: #fff7e6; margin: .2rem 0 .8rem; }
 .admin-tick span { display: flex; flex-direction: column; gap: .15rem; }
 .admin-tick small { color: var(--muted); font-weight: 500; }
+/* Haken mit Erklärung darunter (z. B. „Konto aktiv“) / tick box with an explanation below (e.g. “account active”) */
+.check.explained { align-items: flex-start; margin: .2rem 0 .8rem; }
+.check.explained span { display: flex; flex-direction: column; gap: .15rem; }
+.check.explained small { color: var(--muted); font-weight: 500; }
 
 /* Anmelde-Sitzungen der Klasse / Class sign-in sessions */
 .session-status { display: inline-flex; align-items: center; gap: .4rem; font-weight: 800; padding: .3rem .8rem; border-radius: 999px; }
@@ -528,6 +573,8 @@ table.compact th { width: 9rem; }
 .class-teacher-choice { margin-top: .6rem; }
 .class-teacher-choice summary { cursor: pointer; font-weight: 700; color: #7a5600; }
 .class-info { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin: -.2rem 0 .6rem; padding: .35rem .8rem; border-radius: 999px; background: #fff7e0; color: #5c4400; font-weight: 600; }
+/* bricht die Zeile um (Telefon), wird aus der Pille ein Kasten / when the line wraps (phone), the pill becomes a box */
+@media (max-width: 640px) { .class-info { border-radius: 14px; } }
 
 /* Restzeit der Sitzung (Kinder) und Hinweis ohne Sitzung
 
@@ -592,10 +639,8 @@ html[data-theme="dark"] input,
 html[data-theme="dark"] select,
 html[data-theme="dark"] textarea,
 html[data-theme="dark"] .menu,
-html[data-theme="dark"] .fox-bubble,
 html[data-theme="dark"] .bp-button.second,
 html[data-theme="dark"] .format-choice i { background: var(--panel); color: var(--ink); }
-html[data-theme="dark"] .fox-bubble::after { border-left-color: var(--panel); }
 html[data-theme="dark"] .card-menu summary { background: rgba(29, 37, 51, .92); color: var(--ink); }
 html[data-theme="dark"] .new-card { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); border-color: color-mix(in srgb, var(--accent) 45%, var(--panel)); }
 html[data-theme="dark"] .flash.ok,
@@ -604,17 +649,19 @@ html[data-theme="dark"] .edition.supported,
 html[data-theme="dark"] .session-status.on,
 html[data-theme="dark"] .session-pill.on,
 html[data-theme="dark"] .session-clock { background: #183a30; color: #9be3c7; }
+html[data-theme="dark"] .field-error { color: #ffb4a8; }
 html[data-theme="dark"] .flash.err,
+html[data-theme="dark"] .badge.locked,
 html[data-theme="dark"] .check.warning { background: #4a2420; color: #ffb4a8; }
 html[data-theme="dark"] .flash.info,
 html[data-theme="dark"] .summer-banner,
 html[data-theme="dark"] .admin-tick,
 html[data-theme="dark"] .badge.returned,
+html[data-theme="dark"] .class-info,
 html[data-theme="dark"] .badge.class-teacher { background: #3d3115; color: #f5d68a; border-color: #5c4a1e; }
 html[data-theme="dark"] .badge.admin { background: #2e2850; color: #c9bfff; }
 html[data-theme="dark"] .badge.teacher,
-html[data-theme="dark"] .badge.subject,
-html[data-theme="dark"] .fox-link { background: #1f3550; color: #a9cdf5; }
+html[data-theme="dark"] .badge.subject { background: #1f3550; color: #a9cdf5; }
 html[data-theme="dark"] .badge.pupil { background: #3d3115; color: #f5d68a; }
 html[data-theme="dark"] .badge.kind { background: color-mix(in srgb, var(--accent) 22%, var(--panel)); color: var(--accent-strong); }
 html[data-theme="dark"] .class-teacher-tick,
@@ -630,7 +677,7 @@ html[data-theme="dark"] .card,
 html[data-theme="dark"] .qr { background: #fff; color: #26324a; }
 button.theme { min-height: 40px; min-width: 40px; padding: .3rem .6rem; border-radius: 999px; font-size: 1.1rem; line-height: 1; }
 @media print {
-    html[data-theme="dark"] { color-scheme: light; --bg: #fff; --panel: #fff; --ink: #26324a; --muted: #6b7690; --line: #e7e0d4; }
+    html[data-theme="dark"] { color-scheme: light; --bg: #fff; --panel: #fff; --ink: #26324a; --muted: #5a647d; --line: #e7e0d4; }
 }
 
 /* Testsystem-Kennzeichnung (TEST_MODE) / Test system marking (TEST_MODE) */
@@ -649,3 +696,13 @@ button.theme { min-height: 40px; min-width: 40px; padding: .3rem .6rem; border-r
 .md-body ul, .md-body ol { padding-left: 1.4rem; }
 .md-body img { max-width: 100%; }
 html[data-theme="dark"] .md-body pre { background: var(--panel); }
+
+/* Telefon und Tablet (Finger statt Maus): jedes Bedienelement mindestens 44 px (Standard 03, Kinderfinger);
+   am Ende der Datei, damit es gewinnt
+   Phone and tablet (finger instead of mouse): every control at least 44 px (standard 03, children's fingers);
+   at the end of the file so that it wins */
+@media (max-width: 640px), (pointer: coarse) {
+    button.small, .btn.small, .share-button, .chip, .language-choice summary { min-height: 44px; }
+    button.theme, .card-menu summary { min-width: 44px; min-height: 44px; width: 44px; height: 44px; }
+    details.library-section > summary, details.collapsible > summary, .check { min-height: 44px; }
+}

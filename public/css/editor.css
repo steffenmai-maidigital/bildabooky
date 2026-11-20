@@ -65,7 +65,7 @@ body.editor-body { overflow: hidden; height: 100vh; height: 100dvh; }
 .ed-row button.ed-with-symbol { display: inline-flex; align-items: center; gap: .4rem; font-weight: 600; }
 .ed-b-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.15; }
 .ed-b-text small { font-weight: 500; font-size: .78rem; color: var(--muted); }
-.ed-arrange .ed-delete { background: #fbe1dd; color: var(--danger, #c0392b); }
+.ed-arrange .ed-delete { background: #fbe1dd; color: var(--danger, #b5352a); }
 .ed-value { min-width: 2.4rem; text-align: center; font-weight: 700; }
 .ed-colour { width: 36px !important; height: 36px; min-width: 36px !important; min-height: 36px !important; padding: 0 !important; border-radius: 50% !important; box-shadow: inset 0 0 0 1px rgba(0,0,0,.18); }
 .ed-colour.on { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--blue) !important; }

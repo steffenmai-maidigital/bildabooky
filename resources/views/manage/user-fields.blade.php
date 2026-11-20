@@ -26,7 +26,16 @@
     <div class="teacher-only" @if($currentRole !== 'teacher') hidden @endif>
         <label class="check admin-tick"><input type="checkbox" name="admin" value="1" @checked($isAdmin)>
             <span><b>🔑 {{ __('Zusätzlich Admin') }}</b>
-            <small>{{ __('Darf Benutzer, Klassen, Fächer und Einstellungen pflegen. Bücher sieht auch ein Admin nur in den Klassen, in denen er unterrichtet.') }}</small></span></label>
+            <small>{{ __('Darf Benutzer, Klassen, Fächer und Einstellungen pflegen. Bücher der Kinder, Klassenbücher und Aufgaben sieht auch ein Admin nur in den Klassen, in denen er unterrichtet.') }}</small></span></label>
+        @if($user && $actor->canLock($user))
+            {{-- Konto aktiv: nur Admins, nur Lehrkräfte und Admins, nie das eigene Konto (UserController::update)
+
+                 Account active: admins only, only teachers and admins, never one's own account (UserController::update) --}}
+            <input type="hidden" name="active" value="0">
+            <label class="check explained"><input type="checkbox" name="active" value="1" @checked(old('active', $user->active))>
+                <span><b>{{ __('Konto aktiv') }}</b>
+                <small>{{ __('Ohne Haken ist das Konto gesperrt: keine Anmeldung, eine laufende Sitzung endet bei der nächsten Aktion. Bücher und Klassen bleiben erhalten.') }}</small></span></label>
+        @endif
         <label for="mfa_policy">{{ __('Zwei-Faktor-Anmeldung (Ausnahme für diese Person)') }}</label>
         <select id="mfa_policy" name="mfa_policy" style="max-width:320px">
             <option value="" @selected(! old('mfa_policy', $user?->mfa_policy))>{{ __('wie Gruppe') }}</option>
@@ -35,7 +44,7 @@
             @endforeach
         </select>
         <label>{{ __('Unterrichtet in diesen Klassen') }}</label>
-        <p class="hint" style="margin-top:0">{{ __('Nur hier gibt es Zugriff auf Bücher: Lehrkräfte und Admins sehen ausschließlich die Bücher der Klassen, in denen sie unterrichten.') }}</p>
+        <p class="hint" style="margin-top:0">{{ __('Nur hier gibt es Zugriff auf Bücher: Lehrkräfte und Admins sehen ausschließlich die Bücher der Klassen, in denen sie unterrichten. Eigene Bücher einer Lehrkraft sehen nur sie selbst und die Admins.') }}</p>
         <div class="row">
             @php($led = old('led_classes', $user?->ledClasses->pluck('id')->all() ?? []))
             @foreach($classes as $c)

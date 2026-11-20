@@ -47,9 +47,9 @@ class Setting extends Model
     }
 
     /**
-     * Alias für die gemeinsamen Bausteine (Verzeichnis, Fuchs) — wie in crewgate und linkhub
+     * Alias für die gemeinsamen Bausteine (Verzeichnis, Begleiterin) — wie in crewgate und linkhub
      *
-     * Alias for the shared building blocks (directory, fox) — as in crewgate and linkhub
+     * Alias for the shared building blocks (directory, companion) — as in crewgate and linkhub
      */
     public static function set(string $key, $value): void
     {

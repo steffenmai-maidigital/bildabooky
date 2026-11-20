@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\AccountConfirmation;
 use App\Support\Totp;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -56,12 +59,25 @@ class AccountController extends Controller
 
         $user->password = $data['password'];
         $user->must_change_password = false;
+        // Kinder: Karte bleibt aktuell. Lehrkräfte und Admins: ein selbst gewähltes Passwort
+        // wird nie lesbar hinterlegt – die Karte mit dem Startpasswort entfällt.
+        // Children: the card stays up to date. Teachers and admins: a self-chosen password
+        // is never stored readably – the card with the initial password is dropped.
         if ($user->hasCard()) {
-            $user->setCardPassword($data['password']);   // Karte bleibt aktuell / card stays up to date
+            $user->setCardPassword($user->isPupil() ? $data['password'] : null);
         }
         $user->save();
 
-        return redirect()->route('account')->with('ok', __('Passwort geändert.'));
+        // Andere Sitzungen dieser Person enden bei ihrer nächsten Anfrage (AuthenticateSession
+        // vergleicht den Passwort-Hash); die eigene Sitzung bekommt den neuen Hash und bleibt
+        // Other sessions of this person end with their next request (AuthenticateSession
+        // compares the password hash); the own session gets the new hash and stays
+        $guard = Auth::guard();
+        if ($guard instanceof SessionGuard) {
+            $request->session()->put('password_hash_' . Auth::getDefaultDriver(), $guard->hashPasswordForCookie($user->getAuthPassword()));
+        }
+
+        return redirect()->route('account')->with('ok', __('Passwort geändert. Auf anderen Geräten bist du jetzt abgemeldet.'));
     }
 
     /**
@@ -73,22 +89,25 @@ class AccountController extends Controller
      */
     private function confirmed(Request $request): bool
     {
-        $request->validate(['password' => ['required', 'string', 'max:200']]);
-        $user = $request->user();
-        $input = (string) $request->input('password');
-        if ($user->isLocal()) {
-            return Hash::check($input, $user->password);
-        }
-
-        return $user->hasTwoFactor() && Totp::verify($user->two_factor_secret, preg_replace('/\s+/', '', $input)) !== null;
+        // gleiche Regeln und Bremse wie beim Download der Sicherung (AccountConfirmation)
+        // same rules and throttle as for the backup download (AccountConfirmation)
+        return AccountConfirmation::passes($request);
     }
 
-    /** Fuchs-Helfer für sich selbst ein- oder ausschalten / Switch the fox helper on or off for oneself */
-    public function fox(Request $request)
+    /**
+     * Cara für sich selbst ein- oder ausblenden; beim Einblenden meldet sie sich zurück
+     *
+     * Show or hide Cara for oneself; when shown again she says she is back
+     */
+    public function companion(Request $request)
     {
-        $on = $request->boolean('fox');
-        $request->user()->forceFill(['fox' => $on])->save();
-        return redirect()->route('account')->with('ok', $on ? __('Der Fuchs ist wieder da!') : __('Der Fuchs macht Pause.'));
+        $on = $request->boolean('companion');
+        $request->user()->forceFill(['companion' => $on])->save();
+        if ($on) {
+            $request->session()->flash('companion_occasion', 'back');
+        }
+
+        return redirect()->route('account')->with('ok', $on ? __('Cara ist wieder da.') : __('Cara macht Pause.'));
     }
 
     public function startTwoFactor(Request $request)

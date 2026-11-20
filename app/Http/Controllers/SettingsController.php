@@ -94,6 +94,11 @@ class SettingsController extends Controller
         if ($request->boolean('ldap_enabled') && (blank($data['ldap_host'] ?? null) || blank($data['ldap_base_dn'] ?? null))) {
             return back()->withInput()->withErrors(['ldap_host' => __('Zum Einschalten der Anmeldung über das Schulverzeichnis bitte Server und Suchbasis eintragen.')]);
         }
+        // … und nur mit Gruppe der Lehrkräfte: sonst käme jedes Konto des Verzeichnisses hinein (auch Schülerkonten)
+        // … and only with a teachers group: otherwise every account of the directory would get in (pupil accounts too)
+        if ($request->boolean('ldap_enabled') && blank($data['ldap_group_teacher'] ?? null)) {
+            return back()->withInput()->withErrors(['ldap_group_teacher' => __('Bitte die Gruppe der Lehrkräfte angeben.')]);
+        }
 
         // Schutz vor dem Aussperren: eine neue Domain muss man bereits benutzen
         // oder ausdrücklich bestätigen (Notausgang: php artisan bildabooky:clear-domain)
@@ -139,18 +144,31 @@ class SettingsController extends Controller
         if (! empty($data['summer_date'])) {
             Setting::put('summer_date', $data['summer_date']);
         }
-        Setting::put('fox_enabled', $request->boolean('fox_enabled') ? '1' : '0');
+        Setting::put('companion_enabled', $request->boolean('companion_enabled') ? '1' : '0');
 
         // Anmeldung über das Schulverzeichnis (Standard 09)
         // Sign-in via the school directory (Standard 09)
         Directory::save($request->only(Directory::KEYS) + ['ldap_enabled' => $request->boolean('ldap_enabled'), 'ldap_certificate' => $request->boolean('ldap_certificate')]);
-        Setting::put('ldap_group_admin', trim((string) ($data['ldap_group_admin'] ?? '')));
-        Setting::put('ldap_group_teacher', trim((string) ($data['ldap_group_teacher'] ?? '')));
         Setting::put('session_required', $request->boolean('session_required') ? '1' : '0');
         Setting::put('mfa_admin', $data['mfa_admin']);
         Setting::put('mfa_teacher', $data['mfa_teacher']);
-        Setting::put('mfa_required_groups', trim((string) ($data['mfa_required_groups'] ?? '')));
         Setting::put('teachers_can_join', $request->boolean('teachers_can_join') ? '1' : '0');
+
+        // Gruppen eindeutig machen: ein Name, den es im Verzeichnis genau einmal gibt, wird als
+        // DN gespeichert; gibt es ihn mehrfach, bleibt der alte Wert und das Feld meldet den Fehler.
+        // Ohne Verzeichnis (aus oder nicht erreichbar) bleibt die Eingabe, wie sie ist.
+        // Make groups unambiguous: a name that exists exactly once in the directory is stored as
+        // its DN; if it exists several times, the old value stays and the field reports the error.
+        // Without a directory (off or unreachable) the entry stays as it is.
+        $groupErrors = [];
+        foreach (['ldap_group_admin', 'ldap_group_teacher', 'mfa_required_groups'] as $field) {
+            $resolved = Directory::resolveGroups(trim((string) ($data[$field] ?? '')));
+            if ($resolved['error'] !== null) {
+                $groupErrors[$field] = $resolved['error'];
+                continue;
+            }
+            Setting::put($field, $resolved['value']);
+        }
 
         foreach (LegalPages::TYPES as $type) {
             Setting::put($type . '_enabled', $request->boolean($type . '_enabled') ? '1' : '0');
@@ -161,6 +179,11 @@ class SettingsController extends Controller
 
         foreach (['summer_class_books', 'summer_classes', 'summer_yearly'] as $k) {
             Setting::put($k, $request->boolean($k) ? '1' : '0');
+        }
+
+        if ($groupErrors) {
+            return redirect()->route('settings')->withInput($request->except('ldap_bind_password'))->withErrors($groupErrors)
+                ->with('notice', __('Die übrigen Einstellungen sind gespeichert. Bitte die markierte Gruppe eindeutig angeben.'));
         }
 
         $warning = null;

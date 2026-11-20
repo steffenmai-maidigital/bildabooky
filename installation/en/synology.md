@@ -117,7 +117,9 @@ In detail – including Nginx Proxy Manager and nginx: [reverse-proxy.md](revers
   volume **`bildabooky_app-data`**; sessions and logs in
   **`bildabooky_app-storage`**. Both survive restarts and updates.
 - Backups are stored in `docker/bildabooky/backups` and can additionally be
-  copied to an external drive with **Hyper Backup**.
+  copied to an external drive with **Hyper Backup**. They contain
+  `.app_key`; the backup downloaded in the browser does not (keep the key
+  separately, see [operations.md](operations.md)).
 - **Update:** **stop** the project → unpack the new files over the old ones
   in `docker/bildabooky` (**back up your customised `docker-compose.yml`
   first and copy it back afterwards!**) → project → **Action → Clean**, then

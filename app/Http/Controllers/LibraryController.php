@@ -15,7 +15,7 @@ class LibraryController extends Controller
         $user = $request->user();
         // erste Seiten (Vorschau) lädt der Browser erst beim Scrollen über /previews
         // first pages (preview) are loaded by the browser only on scrolling, via /previews
-        $with = ['owner:id,first_name,last_name,role', 'schoolClass:id,name', 'subject'];
+        $with = ['owner:id,first_name,last_name,role,school_class_id', 'schoolClass:id,name', 'subject'];
 
         // eigene Bücher, ohne Klassenbücher und Vorlagen (die stehen bei der Klasse)
         // own books, without class books and templates (those are shown with the class)
@@ -125,7 +125,9 @@ class LibraryController extends Controller
                 $pupilBooks = Book::with(array_merge($with, ['template:id,title']))->where('kind', Book::KIND_OWN)
                     ->where(fn ($q) => $q->whereIn('user_id', $pupils->pluck('id'))->orWhere('school_class_id', $class->id))
                     ->where('user_id', '!=', $user->id)
-                    ->get()->groupBy('user_id');
+                    // eigene Bücher anderer Lehrkräfte nur, wenn sie sie geteilt haben (Book::visibleTo)
+                    // other teachers' own books only if they shared them (Book::visibleTo)
+                    ->get()->reject(fn (Book $b) => $b->isTeachersOwn() && ! $b->visibleTo($user))->groupBy('user_id');
 
                 // Kinder der Klasse, dazu Besitzer von Büchern der Klasse, die (nicht mehr) in ihr sind
                 // Children of the class, plus owners of books of the class who are not (or no longer) in it
